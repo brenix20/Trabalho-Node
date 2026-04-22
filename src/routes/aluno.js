@@ -1,7 +1,7 @@
 'use strict';
 const express = require('express');
 const router  = express.Router();
-const db      = require('../db');
+const { Curso, Disciplina, PlanoEstudo, Matricula, PedidoMatricula } = require('../models/mongoModels');
 const upload  = require('../middleware/upload');
 const { requireAuth, requirePerfil } = require('../middleware/auth');
 const {
@@ -15,19 +15,27 @@ function redirectMsg(res, section, type, message) {
   return res.redirect(`/aluno?table=${encodeURIComponent(section)}&type=${type}&message=${encodeURIComponent(message)}`);
 }
 
+async function nextId(Model, field) {
+  const last = await Model.findOne({ [field]: { $exists: true, $ne: null } }).sort({ [field]: -1 }).select(field).lean();
+  return (last?.[field] || 0) + 1;
+}
+
+function toDateInput(d) {
+  if (!d) return '';
+  return new Date(d).toISOString().slice(0, 10);
+}
+
 async function getAlunoSessao(req) {
   const userId = parseInt(req.session.utilizador_id, 10) || 0;
   if (!userId) return null;
-  const [[aluno]] = await db.query(
-    'SELECT IdAluno, EstadoValidacao FROM matriculas WHERE IdAluno = ? LIMIT 1', [userId]
-  );
+  const aluno = await Matricula.findOne({ IdAluno: userId }).select('IdAluno EstadoValidacao').lean();
   return aluno || null;
 }
 
 // ── GET /aluno ────────────────────────────────────────────────────────────────
 router.get('/', async (req, res) => {
-  const [cursosArr]     = await db.query('SELECT IdCurso, Curso FROM cursos ORDER BY Curso');
-  const [disciplinasArr]= await db.query('SELECT IdDisciplina, Disciplina FROM disciplina ORDER BY Disciplina');
+  const cursosArr = await Curso.find().sort({ Curso: 1 }).select('IdCurso Curso').lean();
+  const disciplinasArr = await Disciplina.find().sort({ Disciplina: 1 }).select('IdDisciplina Disciplina').lean();
   const alunoSessao     = await getAlunoSessao(req);
   const estadoFicha     = normalizarEstadoValidacao(alunoSessao?.EstadoValidacao || '');
   const alunoIdSessao   = alunoSessao ? parseInt(alunoSessao.IdAluno, 10) : 0;
@@ -37,12 +45,10 @@ router.get('/', async (req, res) => {
   // Último pedido de matrícula
   let ultimoPedido = null;
   if (alunoIdSessao) {
-    const [[p]] = await db.query(
-      `SELECT IdPedido, Estado, ObservacaoDecisao, DecididoPor, DataPedido, DataDecisao, IdCurso
-       FROM pedidos_matricula WHERE IdAluno = ? ORDER BY IdPedido DESC LIMIT 1`,
-      [alunoIdSessao]
-    );
-    ultimoPedido = p || null;
+    ultimoPedido = await PedidoMatricula.findOne({ IdAluno: alunoIdSessao })
+      .sort({ IdPedido: -1, _id: -1 })
+      .select('IdPedido Estado ObservacaoDecisao DecididoPor DataPedido DataDecisao IdCurso')
+      .lean();
   }
 
   const estadoPedido         = ultimoPedido?.Estado || '';
@@ -56,7 +62,7 @@ router.get('/', async (req, res) => {
 
   // ── FOTO ──────────────────────────────────────────────────────
   if (table === 'matriculas' && action === 'foto') {
-    const [[row]] = await db.query('SELECT Foto FROM matriculas WHERE IdAluno = ?', [alunoIdSessao]);
+    const row = await Matricula.findOne({ IdAluno: alunoIdSessao }).select('Foto').lean();
     if (!row || !row.Foto) return res.sendStatus(404);
     res.set('Content-Type', 'image/jpeg');
     return res.send(row.Foto);
@@ -68,26 +74,30 @@ router.get('/', async (req, res) => {
   let turmaColegas = [];
 
   if (alunoIdSessao) {
-    const [[fa]] = await db.query(
-      `SELECT m.*, c.Curso FROM matriculas m JOIN cursos c ON c.IdCurso = m.IdCurso WHERE m.IdAluno = ?`,
-      [alunoIdSessao]
-    );
-    fichaAluno = fa ? { ...fa, DataNascimento: fa.DataNascimento ? String(fa.DataNascimento).slice(0, 10) : '' } : null;
+    const fa = await Matricula.findOne({ IdAluno: alunoIdSessao }).lean();
+    if (fa) {
+      const curso = await Curso.findOne({ IdCurso: fa.IdCurso }).select('Curso').lean();
+      fichaAluno = {
+        ...fa,
+        Curso: curso?.Curso || '',
+        DataNascimento: toDateInput(fa.DataNascimento),
+      };
+    }
 
     if (fichaAluno) {
-      [fichaDisciplinas] = await db.query(
-        `SELECT d.Disciplina, d.Sigla FROM plano_estudos pe
-         JOIN disciplina d ON d.IdDisciplina = pe.IdDisciplina
-         WHERE pe.IdCurso = ?`,
-        [fichaAluno.IdCurso]
-      );
+      const plano = await PlanoEstudo.find({ IdCurso: fichaAluno.IdCurso }).select('IdDisciplina').lean();
+      const ids = plano.map((p) => p.IdDisciplina);
+      fichaDisciplinas = await Disciplina.find({ IdDisciplina: { $in: ids } })
+        .sort({ Disciplina: 1 })
+        .select('Disciplina Sigla -_id')
+        .lean();
     }
 
     if (action === 'minha_turma' && alunoMatriculaEfetivada && fichaAluno) {
-      [turmaColegas] = await db.query(
-        `SELECT IdAluno, Nome FROM matriculas WHERE IdCurso = ? AND EstadoValidacao = 'Aprovada' ORDER BY Nome`,
-        [fichaAluno.IdCurso]
-      );
+      turmaColegas = await Matricula.find({ IdCurso: fichaAluno.IdCurso, EstadoValidacao: 'Aprovada' })
+        .sort({ Nome: 1 })
+        .select('IdAluno Nome -_id')
+        .lean();
     }
   }
 
@@ -122,11 +132,21 @@ router.post('/', upload.single('Foto'), async (req, res) => {
       const foto     = req.file ? req.file.buffer : null;
       const userId   = parseInt(req.session.utilizador_id, 10);
 
-      await db.query(
-        `INSERT INTO matriculas (IdAluno, IdUser, Nome, IdCurso, DataNascimento, Morada, Email, Telefone, Foto, EstadoValidacao)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pendente')`,
-        [userId, userId, nome, idCurso, dataNasc, morada, email, telefone, foto]
-      );
+      const exists = await Matricula.findOne({ IdAluno: userId }).select('_id').lean();
+      if (exists) return redirectMsg(res, 'matriculas', 'error', 'Já tens uma ficha associada.');
+
+      await Matricula.create({
+        IdAluno: userId,
+        IdUser: userId,
+        Nome: nome,
+        IdCurso: idCurso,
+        DataNascimento: dataNasc,
+        Morada: morada,
+        Email: email,
+        Telefone: telefone,
+        Foto: foto,
+        EstadoValidacao: 'Pendente',
+      });
       return redirectMsg(res, 'matriculas', 'success', 'Ficha submetida para validação.');
     } catch (e) {
       return redirectMsg(res, 'matriculas', 'error', e.message);
@@ -145,12 +165,17 @@ router.post('/', upload.single('Foto'), async (req, res) => {
       const telefone = validarTelefone(req.body.Telefone);
       const foto     = req.file ? req.file.buffer : null;
 
-      const fields = ['Nome=?', 'IdCurso=?', 'DataNascimento=?', 'Morada=?', 'Email=?', 'Telefone=?'];
-      const vals   = [nome, idCurso, dataNasc, morada, email, telefone];
-      if (foto) { fields.push('Foto=?'); vals.push(foto); }
-      vals.push(alunoIdSessao);
+      const payload = {
+        Nome: nome,
+        IdCurso: idCurso,
+        DataNascimento: dataNasc,
+        Morada: morada,
+        Email: email,
+        Telefone: telefone,
+      };
+      if (foto) payload.Foto = foto;
 
-      await db.query(`UPDATE matriculas SET ${fields.join(',')} WHERE IdAluno = ?`, vals);
+      await Matricula.updateOne({ IdAluno: alunoIdSessao }, { $set: payload });
       return redirectMsg(res, 'matriculas', 'success', 'Ficha atualizada com sucesso.');
     } catch (e) {
       return redirectMsg(res, 'matriculas', 'error', e.message);
@@ -163,14 +188,20 @@ router.post('/', upload.single('Foto'), async (req, res) => {
     const estado = normalizarEstadoValidacao(alunoSessao?.EstadoValidacao || '');
     if (estado !== 'Aprovada') return redirectMsg(res, 'pedidos', 'error', 'A tua ficha ainda não está aprovada.');
 
-    const idCurso = parseInt(req.body.IdCurso, 10);
     const obs     = String(req.body.Observacoes || '').trim();
+    const matricula = await Matricula.findOne({ IdAluno: alunoIdSessao }).select('Nome Email IdCurso').lean();
+    if (!matricula) return redirectMsg(res, 'pedidos', 'error', 'Sem ficha associada.');
 
-    await db.query(
-      `INSERT INTO pedidos_matricula (IdAluno, NomeCandidato, Email, IdCurso, Observacoes, Estado)
-       SELECT IdAluno, Nome, Email, IdCurso, ?, 'Pendente' FROM matriculas WHERE IdAluno = ?`,
-      [obs || null, alunoIdSessao]
-    );
+    await PedidoMatricula.create({
+      IdPedido: await nextId(PedidoMatricula, 'IdPedido'),
+      IdAluno: alunoIdSessao,
+      NomeCandidato: matricula.Nome,
+      Email: matricula.Email || null,
+      IdCurso: matricula.IdCurso || null,
+      Observacoes: obs || null,
+      Estado: 'Pendente',
+      DataPedido: new Date(),
+    });
     return redirectMsg(res, 'pedidos', 'success', 'Pedido de matrícula submetido com sucesso.');
   }
 

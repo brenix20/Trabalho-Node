@@ -4,81 +4,120 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login — IPCAVNF</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="login-page">
   <div class="login-card">
-    <h1>Autenticação</h1>
-    <p class="subtitle">Acede ao sistema de gestão académica</p>
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <i class="fas fa-graduation-cap" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem; display: block;"></i>
+      <h1>IPCAVNF</h1>
+      <p class="subtitle">Sistema de Gestão Académica</p>
+    </div>
 
     <% if (mensagem) { %>
-      <div class="message <%= tipo %>"><%= mensagem %></div>
+      <div class="message <%= tipo %>">
+        <i class="fas fa-<%= tipo === 'success' ? 'check-circle' : 'exclamation-circle' %>" style="margin-right: 0.5rem;"></i>
+        <%= mensagem %>
+      </div>
     <% } %>
 
     <!-- Entrar -->
     <form method="post" action="/login">
       <input type="hidden" name="form_action" value="login">
-      <h2 class="auth-title">Entrar</h2>
-      <label for="utilizador">Utilizador</label>
-      <input id="utilizador" name="utilizador" type="text" required value="<%= loginInput %>">
-      <label for="senha">Password</label>
-      <input id="senha" name="senha" type="password" required>
-      <button type="submit">Entrar</button>
+      <h2 class="auth-title"><i class="fas fa-sign-in-alt"></i> Aceder</h2>
+      
+      <label for="utilizador"><i class="fas fa-user"></i> Utilizador</label>
+      <input id="utilizador" name="utilizador" type="text" required placeholder="Insira o seu utilizador" value="<%= loginInput %>">
+      
+      <label for="senha"><i class="fas fa-lock"></i> Palavra-passe</label>
+      <input id="senha" name="senha" type="password" required placeholder="Insira a sua palavra-passe">
+      
+      <button type="submit" style="width: 100%; margin-top: 1rem;">
+        <i class="fas fa-arrow-right"></i> Entrar
+      </button>
     </form>
 
     <!-- Esqueceu password -->
-    <button id="toggle_esqueceu" class="secondary-button" type="button"
-            aria-controls="bloco_esqueceu_password"
-            aria-expanded="<%= mostrarEsqueceu ? 'true' : 'false' %>">
-      Esqueceu-se da palavra passe?
-    </button>
+    <div style="text-align: center; margin-top: 1.5rem;">
+      <button id="toggle_esqueceu" class="secondary-button" type="button" style="background: #8b5cf6; width: 100%;"
+              aria-controls="bloco_esqueceu_password"
+              aria-expanded="<%= mostrarEsqueceu ? 'true' : 'false' %>">
+        <i class="fas fa-key"></i> Recuperar palavra-passe
+      </button>
+    </div>
 
-    <div id="bloco_esqueceu_password" <%= mostrarEsqueceu ? '' : 'hidden' %>>
-      <div class="auth-divider"><span>recuperar</span></div>
+    <div id="bloco_esqueceu_password" <%= mostrarEsqueceu ? '' : 'hidden' %> style="margin-top: 1.5rem;">
+      <div class="auth-divider"><span>recuperar acesso</span></div>
       <form method="post" action="/login">
         <input type="hidden" name="form_action" value="forgot_password">
-        <h2 class="auth-title">Nova palavra passe</h2>
-        <label for="utilizador_esqueceu">Utilizador</label>
-        <input id="utilizador_esqueceu" name="utilizador_esqueceu" type="text" required
+        <h2 class="auth-title"><i class="fas fa-redo-alt"></i> Redefinir Palavra-passe</h2>
+        
+        <label for="utilizador_esqueceu"><i class="fas fa-user"></i> Utilizador</label>
+        <input id="utilizador_esqueceu" name="utilizador_esqueceu" type="text" required 
+               placeholder="Insira o seu utilizador"
                value="<%= utilizadorEsqueceuInput %>">
-        <label for="nova_senha_esqueceu">Nova palavra passe</label>
+        
+        <label for="nova_senha_esqueceu"><i class="fas fa-lock"></i> Nova palavra-passe</label>
         <input id="nova_senha_esqueceu" name="nova_senha_esqueceu" type="password"
-               minlength="12" maxlength="128" autocomplete="new-password" required>
-        <label for="confirmar_senha_esqueceu">Confirmar nova palavra passe</label>
+               minlength="12" maxlength="128" autocomplete="new-password" required
+               placeholder="Mínimo 12 caracteres">
+        
+        <label for="confirmar_senha_esqueceu"><i class="fas fa-lock"></i> Confirmar palavra-passe</label>
         <input id="confirmar_senha_esqueceu" name="confirmar_senha_esqueceu" type="password"
-               minlength="12" maxlength="128" autocomplete="new-password" required>
-        <p class="subtitle">Mínimo 12 caracteres com maiúsculas, minúsculas, números e símbolos.</p>
-        <button type="submit" class="secondary-button">Atualizar palavra passe</button>
+               minlength="12" maxlength="128" autocomplete="new-password" required
+               placeholder="Confirme a palavra-passe">
+        
+        <p class="subtitle" style="margin-top: 0.75rem;">
+          <i class="fas fa-info-circle"></i> Mínimo 12 caracteres com maiúsculas, minúsculas, números e símbolos.
+        </p>
+        
+        <button type="submit" style="width: 100%; margin-top: 1rem; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+          <i class="fas fa-check"></i> Atualizar Palavra-passe
+        </button>
       </form>
     </div>
 
-    <div class="auth-divider"><span>ou</span></div>
+    <div class="auth-divider"><span>criar nova conta</span></div>
 
     <!-- Criar conta -->
     <form method="post" action="/login">
       <input type="hidden" name="form_action" value="register">
-      <h2 class="auth-title">Criar conta</h2>
-      <label for="novo_utilizador">Novo utilizador</label>
+      <h2 class="auth-title"><i class="fas fa-user-plus"></i> Registar</h2>
+      
+      <label for="novo_utilizador"><i class="fas fa-user"></i> Novo utilizador</label>
       <input id="novo_utilizador" name="novo_utilizador" type="text" maxlength="40" required
-             value="<%= novoUtilizadorInput %>">
-      <label for="nova_senha">Password</label>
+             placeholder="Escolha um utilizador" value="<%= novoUtilizadorInput %>">
+      
+      <label for="nova_senha"><i class="fas fa-lock"></i> Palavra-passe</label>
       <input id="nova_senha" name="nova_senha" type="password"
-             minlength="12" maxlength="128" autocomplete="new-password" required>
-      <label for="confirmar_senha">Confirmar Password</label>
+             minlength="12" maxlength="128" autocomplete="new-password" required
+             placeholder="Mínimo 12 caracteres">
+      
+      <label for="confirmar_senha"><i class="fas fa-lock"></i> Confirmar Palavra-passe</label>
       <input id="confirmar_senha" name="confirmar_senha" type="password"
-             minlength="12" maxlength="128" autocomplete="new-password" required>
-      <p class="subtitle">Mínimo 12 caracteres com maiúsculas, minúsculas, números e símbolos.</p>
-      <label for="perfil">Tipo de perfil</label>
+             minlength="12" maxlength="128" autocomplete="new-password" required
+             placeholder="Confirme a palavra-passe">
+      
+      <p class="subtitle" style="margin-top: 0.75rem;">
+        <i class="fas fa-info-circle"></i> Mínimo 12 caracteres com maiúsculas, minúsculas, números e símbolos.
+      </p>
+      
+      <label for="perfil"><i class="fas fa-user-tag"></i> Tipo de Perfil</label>
       <select id="perfil" name="perfil" required>
-        <option value="">Selecione</option>
+        <option value="">— Selecione um perfil —</option>
         <% perfis.forEach(p => { %>
           <option value="<%= p.IdPerfis %>"
               <%= String(perfilSelecionado) === String(p.IdPerfis) ? 'selected' : '' %>>
-            <%= p.perfil %>
+            <i class="fas fa-<%= p.perfil === 'aluno' ? 'user-graduate' : p.perfil === 'funcionario' ? 'briefcase' : 'cog' %>"></i>
+            <%= p.perfil.charAt(0).toUpperCase() + p.perfil.slice(1) %>
           </option>
         <% }) %>
       </select>
-      <button type="submit">Criar conta</button>
+      
+      <button type="submit" style="width: 100%; margin-top: 1rem;">
+        <i class="fas fa-user-check"></i> Criar Conta
+      </button>
     </form>
   </div>
 
