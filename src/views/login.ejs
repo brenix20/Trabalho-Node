@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — IPCAVNF</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <h1>Autenticação</h1>
+    <p class="subtitle">Acede ao sistema de gestão académica</p>
+
+    <% if (mensagem) { %>
+      <div class="message <%= tipo %>"><%= mensagem %></div>
+    <% } %>
+
+    <!-- Entrar -->
+    <form method="post" action="/login">
+      <input type="hidden" name="form_action" value="login">
+      <h2 class="auth-title">Entrar</h2>
+      <label for="utilizador">Utilizador</label>
+      <input id="utilizador" name="utilizador" type="text" required value="<%= loginInput %>">
+      <label for="senha">Password</label>
+      <input id="senha" name="senha" type="password" required>
+      <button type="submit">Entrar</button>
+    </form>
+
+    <!-- Esqueceu password -->
+    <button id="toggle_esqueceu" class="secondary-button" type="button"
+            aria-controls="bloco_esqueceu_password"
+            aria-expanded="<%= mostrarEsqueceu ? 'true' : 'false' %>">
+      Esqueceu-se da palavra passe?
+    </button>
+
+    <div id="bloco_esqueceu_password" <%= mostrarEsqueceu ? '' : 'hidden' %>>
+      <div class="auth-divider"><span>recuperar</span></div>
+      <form method="post" action="/login">
+        <input type="hidden" name="form_action" value="forgot_password">
+        <h2 class="auth-title">Nova palavra passe</h2>
+        <label for="utilizador_esqueceu">Utilizador</label>
+        <input id="utilizador_esqueceu" name="utilizador_esqueceu" type="text" required
+               value="<%= utilizadorEsqueceuInput %>">
+        <label for="nova_senha_esqueceu">Nova palavra passe</label>
+        <input id="nova_senha_esqueceu" name="nova_senha_esqueceu" type="password"
+               minlength="12" maxlength="128" autocomplete="new-password" required>
+        <label for="confirmar_senha_esqueceu">Confirmar nova palavra passe</label>
+        <input id="confirmar_senha_esqueceu" name="confirmar_senha_esqueceu" type="password"
+               minlength="12" maxlength="128" autocomplete="new-password" required>
+        <p class="subtitle">Mínimo 12 caracteres com maiúsculas, minúsculas, números e símbolos.</p>
+        <button type="submit" class="secondary-button">Atualizar palavra passe</button>
+      </form>
+    </div>
+
+    <div class="auth-divider"><span>ou</span></div>
+
+    <!-- Criar conta -->
+    <form method="post" action="/login">
+      <input type="hidden" name="form_action" value="register">
+      <h2 class="auth-title">Criar conta</h2>
+      <label for="novo_utilizador">Novo utilizador</label>
+      <input id="novo_utilizador" name="novo_utilizador" type="text" maxlength="40" required
+             value="<%= novoUtilizadorInput %>">
+      <label for="nova_senha">Password</label>
+      <input id="nova_senha" name="nova_senha" type="password"
+             minlength="12" maxlength="128" autocomplete="new-password" required>
+      <label for="confirmar_senha">Confirmar Password</label>
+      <input id="confirmar_senha" name="confirmar_senha" type="password"
+             minlength="12" maxlength="128" autocomplete="new-password" required>
+      <p class="subtitle">Mínimo 12 caracteres com maiúsculas, minúsculas, números e símbolos.</p>
+      <label for="perfil">Tipo de perfil</label>
+      <select id="perfil" name="perfil" required>
+        <option value="">Selecione</option>
+        <% perfis.forEach(p => { %>
+          <option value="<%= p.IdPerfis %>"
+              <%= String(perfilSelecionado) === String(p.IdPerfis) ? 'selected' : '' %>>
+            <%= p.perfil %>
+          </option>
+        <% }) %>
+      </select>
+      <button type="submit">Criar conta</button>
+    </form>
+  </div>
+
+  <script>
+    (function () {
+      var btn   = document.getElementById('toggle_esqueceu');
+      var bloco = document.getElementById('bloco_esqueceu_password');
+      if (!btn || !bloco) return;
+      btn.addEventListener('click', function () {
+        var visivel = !bloco.hidden;
+        bloco.hidden = visivel;
+        btn.setAttribute('aria-expanded', visivel ? 'false' : 'true');
+      });
+    })();
+  </script>
+</body>
+</html>

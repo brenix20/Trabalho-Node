@@ -1,0 +1,30 @@
+<%
+  const perfil = (sessao && sessao.utilizador_perfil || '').toLowerCase();
+  const nome   = sessao && sessao.utilizador_nome || '';
+%>
+<nav class="navbar">
+  <span class="nav-brand">IPCAVNF</span>
+  <ul class="nav-links">
+    <% if (perfil === 'gestor') { %>
+      <li><a href="/gestor?table=disciplina">Disciplinas</a></li>
+      <li><a href="/gestor?table=cursos">Cursos</a></li>
+      <li><a href="/gestor?table=matriculas">Matrículas</a></li>
+      <li><a href="/gestor?table=plano_estudos">Plano de Estudos</a></li>
+    <% } else if (perfil === 'aluno') { %>
+      <li><a href="/aluno?table=matriculas&action=ficha">A minha ficha</a></li>
+      <li><a href="/aluno?table=matriculas&action=ficha_edit">Atualizar dados</a></li>
+      <li><a href="/aluno?table=pedidos">Pedido de matrícula</a></li>
+      <li><a href="/aluno?table=matriculas&action=minhas_disciplinas">As minhas disciplinas</a></li>
+      <li><a href="/aluno?table=matriculas&action=minha_turma">A minha turma</a></li>
+    <% } else if (perfil === 'funcionario' || perfil === 'funcionário') { %>
+      <li><a href="/funcionario?section=pedidos">Pedidos</a></li>
+      <li><a href="/funcionario?section=matriculas">Matrículas</a></li>
+      <li><a href="/funcionario?section=notas">Notas</a></li>
+      <li><a href="/funcionario?section=pautas">Pautas</a></li>
+    <% } %>
+  </ul>
+  <div class="nav-user">
+    <span><%= nome %></span>
+    <a href="/logout" class="logout-btn">Sair</a>
+  </div>
+</nav>

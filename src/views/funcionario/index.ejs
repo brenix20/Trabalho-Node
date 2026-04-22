@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funcionário — IPCAVNF</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<%- include('../partials/navbar') %>
+
+<div class="main-container">
+  <% if (mensagem) { %>
+    <div class="message <%= tipo %>"><%= mensagem %></div>
+  <% } %>
+
+  <!-- ═══ PEDIDOS ═══════════════════════════════════════════════ -->
+  <% if (section === 'pedidos') { %>
+    <h2>Pedidos de Matrícula</h2>
+
+    <!-- Filtro de estado -->
+    <form method="get" action="/funcionario" class="filters-row">
+      <input type="hidden" name="section" value="pedidos">
+      <div>
+        <label>Estado</label><br>
+        <select name="estado_pedido">
+          <% ['Pendente','Aprovado','Rejeitado'].forEach(e => { %>
+            <option value="<%= e %>"><%= e %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div><button type="submit">Filtrar</button></div>
+    </form>
+
+    <div class="table-scroll">
+      <table>
+        <tr><th>ID</th><th>Candidato</th><th>Aluno</th><th>Curso</th><th>Data</th><th>Estado</th><th>Ações</th></tr>
+        <% pedidos.forEach(p => { %>
+          <tr>
+            <td><%= p.IdPedido %></td>
+            <td><%= p.NomeCandidato %></td>
+            <td><%= p.NomeAluno || '-' %></td>
+            <td><%= p.Curso || '-' %></td>
+            <td><%= formatDatePt(String(p.DataPedido || '').slice(0,10)) %></td>
+            <td><%= p.Estado %></td>
+            <td class="actions">
+              <% if (p.Estado === 'Pendente') { %>
+                <form class="inline" method="post" action="/funcionario">
+                  <input type="hidden" name="post_action" value="decidir_pedido">
+                  <input type="hidden" name="IdPedido"    value="<%= p.IdPedido %>">
+                  <input type="hidden" name="decisao"     value="validar">
+                  <button class="table-action-btn" type="submit">Aprovar</button>
+                </form>
+                <form class="inline" method="post" action="/funcionario"
+                      onsubmit="return confirm('Rejeitar este pedido?')">
+                  <input type="hidden" name="post_action" value="decidir_pedido">
+                  <input type="hidden" name="IdPedido"    value="<%= p.IdPedido %>">
+                  <input type="hidden" name="decisao"     value="rejeitar">
+                  <button class="table-action-btn danger-button" type="submit">Rejeitar</button>
+                </form>
+              <% } else { %>
+                <span>—</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!pedidos.length) { %>
+          <tr><td colspan="7">Sem pedidos para os filtros selecionados.</td></tr>
+        <% } %>
+      </table>
+    </div>
+  <% } %>
+
+  <!-- ═══ MATRÍCULAS ═══════════════════════════════════════════ -->
+  <% if (section === 'matriculas') { %>
+    <h2>Matrículas</h2>
+
+    <form method="get" action="/funcionario" class="filters-row">
+      <input type="hidden" name="section" value="matriculas">
+      <div>
+        <label>Pesquisar</label><br>
+        <input type="text" name="q" placeholder="ID ou nome">
+      </div>
+      <div>
+        <label>Curso</label><br>
+        <select name="filtro_curso">
+          <option value="0">Todos</option>
+          <% cursos.forEach(c => { %>
+            <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label>Estado</label><br>
+        <select name="estado_mat">
+          <option value="">Todos</option>
+          <option value="Pendente">Pendente</option>
+          <option value="Aprovada">Aprovada</option>
+          <option value="Rejeitada">Rejeitada</option>
+        </select>
+      </div>
+      <div><button type="submit">Filtrar</button></div>
+    </form>
+
+    <div class="table-scroll">
+      <table>
+        <tr><th>ID</th><th>Nome</th><th>Curso</th><th>Email</th><th>Estado</th><th>Ações</th></tr>
+        <% matriculas.forEach(m => { %>
+          <tr>
+            <td><%= m.IdAluno %></td>
+            <td><%= m.Nome %></td>
+            <td><%= m.Curso %></td>
+            <td><%= m.Email || '-' %></td>
+            <td><%= m.EstadoValidacao || 'Pendente' %></td>
+            <td class="actions">
+              <% if (m.EstadoValidacao === 'Pendente') { %>
+                <form class="inline" method="post" action="/funcionario">
+                  <input type="hidden" name="post_action" value="decidir_matricula">
+                  <input type="hidden" name="IdAluno"     value="<%= m.IdAluno %>">
+                  <input type="hidden" name="decisao"     value="validar">
+                  <button class="table-action-btn" type="submit">Aprovar</button>
+                </form>
+                <form class="inline" method="post" action="/funcionario"
+                      onsubmit="return confirm('Rejeitar esta matrícula?')">
+                  <input type="hidden" name="post_action" value="decidir_matricula">
+                  <input type="hidden" name="IdAluno"     value="<%= m.IdAluno %>">
+                  <input type="hidden" name="decisao"     value="rejeitar">
+                  <button class="table-action-btn danger-button" type="submit">Rejeitar</button>
+                </form>
+              <% } else { %>
+                <span><%= m.EstadoValidacao %></span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!matriculas.length) { %>
+          <tr><td colspan="6">Sem matrículas para os filtros selecionados.</td></tr>
+        <% } %>
+      </table>
+    </div>
+  <% } %>
+
+  <!-- ═══ NOTAS ═════════════════════════════════════════════════ -->
+  <% if (section === 'notas') { %>
+    <h2>Notas de Avaliação</h2>
+
+    <!-- Formulário criar/editar nota -->
+    <div class="form-box">
+      <h3><%= notaEdit ? 'Editar nota' : 'Registar nota' %></h3>
+      <form method="post" action="/funcionario">
+        <input type="hidden" name="post_action" value="guardar_nota">
+        <% if (notaEdit) { %>
+          <input type="hidden" name="IdNota" value="<%= notaEdit.IdNota %>">
+        <% } %>
+
+        <label>Aluno</label><br>
+        <select id="IdAluno" name="IdAluno" required>
+          <option value="">Selecionar aluno</option>
+          <% alunosSelect.forEach(a => { %>
+            <option value="<%= a.IdAluno %>" data-curso-id="<%= a.IdCurso %>"
+              <%= notaEdit && notaEdit.IdAluno == a.IdAluno ? 'selected' : '' %>>
+              <%= a.IdAluno %> — <%= a.Nome %>
+            </option>
+          <% }) %>
+        </select><br>
+
+        <label>Disciplina</label><br>
+        <select id="IdDisciplina" name="IdDisciplina" required>
+          <option value="">Selecionar aluno primeiro</option>
+          <% disciplinas.forEach(d => { %>
+            <option value="<%= d.IdDisciplina %>"
+              data-cursos="<%= d.cursos || '' %>"
+              <%= notaEdit && notaEdit.IdDisciplina == d.IdDisciplina ? 'selected' : '' %>>
+              <%= d.Disciplina %>
+            </option>
+          <% }) %>
+        </select><br>
+
+        <label>Época</label><br>
+        <select name="Epoca" required>
+          <% ['Normal','Recurso','Especial'].forEach(e => { %>
+            <option value="<%= e %>"
+              <%= notaEdit && notaEdit.Epoca === e ? 'selected' : (e === 'Normal' && !notaEdit ? 'selected' : '') %>>
+              <%= e %>
+            </option>
+          <% }) %>
+        </select><br>
+
+        <label>Ano letivo (ex: 2024/2025)</label><br>
+        <input type="text" name="AnoLetivo" pattern="\d{4}/\d{4}" required
+               value="<%= notaEdit ? notaEdit.AnoLetivo : anoLetivoAtual %>"><br>
+
+        <label>Nota (0–20)</label><br>
+        <input type="number" name="Nota" min="0" max="20" step="0.1" required
+               value="<%= notaEdit ? notaEdit.Nota : '' %>"><br>
+
+        <label>Observações</label><br>
+        <input type="text" name="Observacoes" maxlength="255"
+               value="<%= notaEdit ? (notaEdit.Observacoes || '') : '' %>"><br>
+
+        <button type="submit"><%= notaEdit ? 'Atualizar nota' : 'Registar nota' %></button>
+        <% if (notaEdit) { %>
+          <a class="cancel-link" href="/funcionario?section=notas">Cancelar</a>
+        <% } %>
+      </form>
+    </div>
+
+    <!-- Filtros de notas -->
+    <form method="get" action="/funcionario" class="filters-row">
+      <input type="hidden" name="section" value="notas">
+      <div>
+        <label>Disciplina</label><br>
+        <select name="f_disciplina">
+          <option value="0">Todas</option>
+          <% disciplinas.forEach(d => { %>
+            <option value="<%= d.IdDisciplina %>"><%= d.Disciplina %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div>
+        <label>Pesquisar</label><br>
+        <input type="text" name="q_nota" placeholder="Aluno, ID ou disciplina">
+      </div>
+      <div><button type="submit">Aplicar</button>
+        <a class="cancel-link" href="/funcionario?section=notas">Limpar</a>
+      </div>
+    </form>
+
+    <div class="notas-scroll">
+      <table>
+        <tr>
+          <th>Aluno</th><th>Disciplina</th><th>Curso</th>
+          <th>Época</th><th>Ano letivo</th><th>Nota</th><th>Resultado</th><th>Ações</th>
+        </tr>
+        <% rowsNotas.forEach(n => { %>
+          <% const resultado = parseFloat(n.Nota) >= 9.5 ? 'Aprovado' : 'Reprovado'; %>
+          <tr>
+            <td><%= n.IdAluno %> — <%= n.NomeAluno %></td>
+            <td><%= n.Disciplina %></td>
+            <td><%= n.Curso || '' %></td>
+            <td><%= n.Epoca %></td>
+            <td><%= n.AnoLetivo %></td>
+            <td><%= parseFloat(n.Nota).toFixed(1) %></td>
+            <td><%= resultado %></td>
+            <td class="actions notas-actions">
+              <a class="table-action-btn edit-action-btn"
+                 href="/funcionario?section=notas&action=edit&id_nota=<%= n.IdNota %>">Editar</a>
+              <form class="inline" method="post" action="/funcionario"
+                    onsubmit="return confirm('Eliminar esta nota?')">
+                <input type="hidden" name="post_action" value="eliminar_nota">
+                <input type="hidden" name="IdNota"      value="<%= n.IdNota %>">
+                <button class="table-action-btn danger-button" type="submit">Excluir</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!rowsNotas.length) { %>
+          <tr><td colspan="8">Não existem notas para os filtros selecionados.</td></tr>
+        <% } %>
+      </table>
+    </div>
+  <% } %>
+
+  <!-- ═══ PAUTAS ════════════════════════════════════════════════ -->
+  <% if (section === 'pautas') { %>
+    <h2>Gerar Pauta de Avaliação</h2>
+
+    <div class="form-box">
+      <h3>Filtros da pauta</h3>
+      <form method="get" action="/funcionario" class="filters-row">
+        <input type="hidden" name="section" value="pautas">
+        <div>
+          <label>Disciplina</label><br>
+          <select name="disciplina_id" required>
+            <option value="0">Selecionar disciplina</option>
+            <% disciplinas.forEach(d => { %>
+              <option value="<%= d.IdDisciplina %>"
+                <%= pautaDisciplinaId == d.IdDisciplina ? 'selected' : '' %>>
+                <%= d.Disciplina %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label>Época</label><br>
+          <select name="epoca">
+            <% ['Normal','Recurso','Especial'].forEach(e => { %>
+              <option value="<%= e %>" <%= pautaEpoca === e ? 'selected' : '' %>><%= e %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div>
+          <label>Ano letivo</label><br>
+          <input type="text" name="ano_letivo" pattern="\d{4}/\d{4}"
+                 value="<%= pautaAnoLetivo %>" required>
+        </div>
+        <div><button type="submit">Gerar pauta</button></div>
+      </form>
+    </div>
+
+    <% if (pautaDisciplinaId > 0) { %>
+      <p class="stats-row">Registos: <%= rowsPauta.length %></p>
+      <table>
+        <tr><th>ID Aluno</th><th>Aluno</th><th>Curso</th><th>Nota</th><th>Resultado</th></tr>
+        <% rowsPauta.forEach(r => { %>
+          <tr>
+            <td><%= r.IdAluno %></td>
+            <td><%= r.NomeAluno %></td>
+            <td><%= r.Curso || '' %></td>
+            <td><%= parseFloat(r.Nota).toFixed(1) %></td>
+            <td><%= r.Resultado %></td>
+          </tr>
+        <% }) %>
+        <% if (!rowsPauta.length) { %>
+          <tr><td colspan="5">Sem notas para os filtros selecionados.</td></tr>
+        <% } %>
+      </table>
+    <% } else { %>
+      <div class="form-box"><p>Seleciona uma disciplina para gerar a pauta.</p></div>
+    <% } %>
+  <% } %>
+</div>
+
+<script>
+  (function () {
+    var alunoSelect     = document.getElementById('IdAluno');
+    var disciplinaSelect = document.getElementById('IdDisciplina');
+    if (!alunoSelect || !disciplinaSelect) return;
+
+    function filtrar() {
+      var opt     = alunoSelect.options[alunoSelect.selectedIndex];
+      var cursoId = opt ? String(opt.getAttribute('data-curso-id') || '') : '';
+      var disp    = 0;
+
+      for (var i = 0; i < disciplinaSelect.options.length; i++) {
+        var o = disciplinaSelect.options[i];
+        if (!o.value) { o.disabled = false; o.hidden = false; continue; }
+        var cursos  = String(o.getAttribute('data-cursos') || '').split(',').filter(Boolean);
+        var ok      = cursoId !== '' && cursos.indexOf(cursoId) !== -1;
+        o.disabled  = !ok;
+        o.hidden    = !ok;
+        if (ok) disp++;
+      }
+
+      var sel = disciplinaSelect.options[disciplinaSelect.selectedIndex];
+      if (sel && sel.value && sel.disabled) disciplinaSelect.value = '';
+
+      if (disciplinaSelect.options.length > 0) {
+        disciplinaSelect.options[0].text = cursoId === '' ? 'Selecionar aluno primeiro'
+          : disp === 0 ? 'Sem disciplinas para o curso' : 'Selecionar disciplina';
+      }
+    }
+
+    alunoSelect.addEventListener('change', filtrar);
+    filtrar();
+  }());
+</script>
+</body>
+</html>

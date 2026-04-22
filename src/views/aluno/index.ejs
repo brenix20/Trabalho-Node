@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Área do Aluno — IPCAVNF</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<%- include('../partials/navbar') %>
+
+<div class="main-container">
+  <% if (mensagem) { %>
+    <div class="message <%= tipo %>"><%= mensagem %></div>
+  <% } %>
+
+  <!-- ═══ FICHA DO ALUNO ════════════════════════════════════════ -->
+  <% if (table === 'matriculas' && action === 'ficha') { %>
+    <h2>A minha ficha</h2>
+
+    <% if (fichaAluno) { %>
+      <div class="ficha-box">
+        <div class="ficha-foto">
+          <img src="/aluno?table=matriculas&action=foto"
+               alt="Foto" onerror="this.style.display='none'">
+        </div>
+        <div class="ficha-dados">
+          <p><strong>Nº Aluno:</strong> <%= fichaAluno.IdAluno %></p>
+          <p><strong>Nome:</strong> <%= fichaAluno.Nome %></p>
+          <p><strong>Curso:</strong> <%= fichaAluno.Curso %></p>
+          <p><strong>Data de nascimento:</strong> <%= formatDatePt(fichaAluno.DataNascimento) %></p>
+          <p><strong>Morada:</strong> <%= fichaAluno.Morada || '-' %></p>
+          <p><strong>Email:</strong> <%= fichaAluno.Email || '-' %></p>
+          <p><strong>Telefone:</strong> <%= fichaAluno.Telefone || '-' %></p>
+          <p><strong>Estado de validação:</strong> <%= fichaAluno.EstadoValidacao || 'Pendente' %></p>
+        </div>
+      </div>
+
+      <h3>Disciplinas do Curso</h3>
+      <% if (fichaDisciplinas.length) { %>
+        <table>
+          <tr><th>Disciplina</th><th>Sigla</th></tr>
+          <% fichaDisciplinas.forEach(d => { %>
+            <tr><td><%= d.Disciplina %></td><td><%= d.Sigla %></td></tr>
+          <% }) %>
+        </table>
+      <% } else { %>
+        <p>Não existem disciplinas associadas ao teu curso.</p>
+      <% } %>
+
+      <p>
+        <% if (estadoFicha === 'Aprovada') { %>
+          <a class="section-link"
+             href="/aluno?table=matriculas&action=ficha_print&id_aluno=<%= fichaAluno.IdAluno %>"
+             target="_blank">Imprimir ficha</a>
+          <% if (alunoMatriculaEfetivada) { %>
+            | <a class="section-link"
+                 href="/aluno?table=matriculas&action=certificado_print&id_aluno=<%= fichaAluno.IdAluno %>"
+                 target="_blank">Imprimir certificado</a>
+          <% } else { %>
+            | <a class="section-link" href="/aluno?table=pedidos">Submeter/acompanhar pedido de matrícula</a>
+          <% } %>
+        <% } else { %>
+          <span>Impressão disponível após validação aprovada.</span>
+        <% } %>
+        | <a class="section-link" href="/aluno?table=matriculas&action=ficha_edit">Atualizar contactos/foto</a>
+      </p>
+
+    <% } else { %>
+      <!-- Ainda sem ficha — formulário de criação -->
+      <div class="form-box">
+        <h3>Submeter ficha de aluno</h3>
+        <p>Preenche os teus dados pessoais e de contacto para criares a tua ficha.</p>
+        <form method="post" action="/aluno" enctype="multipart/form-data">
+          <input type="hidden" name="table"  value="matriculas">
+          <input type="hidden" name="action" value="create_self">
+
+          <label>Nome completo</label><br>
+          <input type="text" name="Nome" maxlength="25" required><br>
+
+          <label>Curso pretendido</label><br>
+          <select name="IdCurso" required>
+            <option value="">Selecione</option>
+            <% cursos.forEach(c => { %>
+              <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
+            <% }) %>
+          </select><br>
+
+          <label>Data de nascimento</label><br>
+          <input type="date" name="DataNascimento" required max="<%= dataMaximaNascimento %>"><br>
+
+          <label>Morada</label><br>
+          <input type="text" name="Morada" maxlength="255" required><br>
+
+          <label>Email</label><br>
+          <input type="email" name="Email" maxlength="120" required><br>
+
+          <label>Contacto telefónico</label><br>
+          <input type="text" name="Telefone" maxlength="9" required placeholder="Ex.: 912345678"><br>
+
+          <label>Foto</label><br>
+          <input type="file" name="Foto" accept=".jpg,.png" required><br>
+
+          <button type="submit">Submeter ficha para validação</button>
+        </form>
+      </div>
+    <% } %>
+  <% } %>
+
+  <!-- ═══ ATUALIZAR FICHA ═══════════════════════════════════════ -->
+  <% if (table === 'matriculas' && action === 'ficha_edit') { %>
+    <h2>Atualizar Minha Ficha</h2>
+    <% if (fichaAluno) { %>
+      <div class="form-box">
+        <form method="post" action="/aluno" enctype="multipart/form-data">
+          <input type="hidden" name="table"  value="matriculas">
+          <input type="hidden" name="action" value="update_self">
+
+          <label>Nome completo</label><br>
+          <input type="text" name="Nome" maxlength="25" required
+                 value="<%= fichaAluno.Nome %>"><br>
+
+          <label>Data de nascimento</label><br>
+          <input type="date" name="DataNascimento" required max="<%= dataMaximaNascimento %>"
+                 value="<%= fichaAluno.DataNascimento %>"><br>
+
+          <label>Curso</label><br>
+          <select name="IdCurso" required>
+            <option value="">Selecione</option>
+            <% cursos.forEach(c => { %>
+              <option value="<%= c.IdCurso %>"
+                <%= fichaAluno.IdCurso == c.IdCurso ? 'selected' : '' %>>
+                <%= c.Curso %>
+              </option>
+            <% }) %>
+          </select><br>
+
+          <label>Morada</label><br>
+          <input type="text" name="Morada" maxlength="255" required
+                 value="<%= fichaAluno.Morada || '' %>"><br>
+
+          <label>Email</label><br>
+          <input type="email" name="Email" maxlength="120" required
+                 value="<%= fichaAluno.Email || '' %>"><br>
+
+          <label>Contacto telefónico</label><br>
+          <input type="text" name="Telefone" maxlength="20" required
+                 value="<%= fichaAluno.Telefone || '' %>"><br>
+
+          <label>Nova Foto (opcional)</label><br>
+          <input type="file" name="Foto" accept=".jpg,.png"><br>
+
+          <button type="submit">Guardar Alterações</button>
+          <a class="cancel-link" href="/aluno?table=matriculas&action=ficha">Cancelar</a>
+        </form>
+      </div>
+    <% } else { %>
+      <p>Não foi encontrada uma matrícula associada ao teu utilizador.</p>
+    <% } %>
+  <% } %>
+
+  <!-- ═══ MINHAS DISCIPLINAS ════════════════════════════════════ -->
+  <% if (table === 'matriculas' && action === 'minhas_disciplinas') { %>
+    <h2>Minhas Disciplinas</h2>
+    <% if (fichaAluno) { %>
+      <div class="form-box">
+        <h3><%= fichaAluno.Nome %> — <%= fichaAluno.Curso %></h3>
+        <% if (fichaDisciplinas.length) { %>
+          <table>
+            <tr><th>Disciplina</th><th>Sigla</th></tr>
+            <% fichaDisciplinas.forEach(d => { %>
+              <tr><td><%= d.Disciplina %></td><td><%= d.Sigla %></td></tr>
+            <% }) %>
+          </table>
+        <% } else { %>
+          <p>Ainda não existem disciplinas associadas ao teu curso.</p>
+        <% } %>
+      </div>
+    <% } else { %>
+      <p>Não foi encontrada uma matrícula associada ao teu utilizador.</p>
+    <% } %>
+  <% } %>
+
+  <!-- ═══ MINHA TURMA ═══════════════════════════════════════════ -->
+  <% if (table === 'matriculas' && action === 'minha_turma') { %>
+    <h2>Minha Turma</h2>
+    <% if (fichaAluno) { %>
+      <div class="form-box">
+        <h3><%= fichaAluno.Curso %></h3>
+        <p><strong>Total de alunos matriculados:</strong> <%= turmaColegas.length %></p>
+        <% if (turmaColegas.length) { %>
+          <div class="table-scroll">
+            <table>
+              <tr><th>Nº Aluno</th><th>Nome</th><th>Observação</th></tr>
+              <% turmaColegas.forEach(c => { %>
+                <tr>
+                  <td><%= c.IdAluno %></td>
+                  <td><%= c.Nome %></td>
+                  <td><%= c.IdAluno == alunoIdSessao ? 'Tu' : '-' %></td>
+                </tr>
+              <% }) %>
+            </table>
+          </div>
+        <% } else { %>
+          <p>Ainda não existem alunos matriculados nesta turma.</p>
+        <% } %>
+      </div>
+    <% } %>
+  <% } %>
+
+  <!-- ═══ PEDIDOS DE MATRÍCULA ══════════════════════════════════ -->
+  <% if (table === 'pedidos') { %>
+    <h2>Pedido de Matrícula</h2>
+
+    <% if (ultimoPedido) { %>
+      <div class="form-box">
+        <h3>Estado do teu pedido</h3>
+        <p><strong>Estado:</strong> <%= ultimoPedido.Estado %></p>
+        <% if (ultimoPedido.ObservacaoDecisao) { %>
+          <p><strong>Observação:</strong> <%= ultimoPedido.ObservacaoDecisao %></p>
+        <% } %>
+        <% if (ultimoPedido.DecididoPor) { %>
+          <p><strong>Decidido por:</strong> <%= ultimoPedido.DecididoPor %></p>
+        <% } %>
+        <% if (ultimoPedido.DataDecisao) { %>
+          <p><strong>Data da decisão:</strong> <%= formatDatePt(String(ultimoPedido.DataDecisao).slice(0,10)) %></p>
+        <% } %>
+      </div>
+    <% } %>
+
+    <% if (alunoPodeCriarPedido) { %>
+      <div class="form-box">
+        <h3>Submeter novo pedido</h3>
+        <form method="post" action="/aluno">
+          <input type="hidden" name="table"  value="pedidos">
+          <input type="hidden" name="action" value="create_self">
+          <label>Observações (opcional)</label><br>
+          <textarea name="Observacoes" maxlength="255" rows="3"></textarea><br>
+          <button type="submit">Submeter pedido de matrícula</button>
+        </form>
+      </div>
+    <% } else if (!ultimoPedido) { %>
+      <div class="form-box">
+        <p>Só podes submeter um pedido após a tua ficha estar aprovada.</p>
+      </div>
+    <% } %>
+  <% } %>
+
+</div>
+</body>
+</html>

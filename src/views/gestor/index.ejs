@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor — IPCAVNF</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<%- include('../partials/navbar') %>
+
+<div class="main-container">
+  <% if (mensagem) { %>
+    <div class="message <%= tipo %>"><%= mensagem %></div>
+  <% } %>
+
+  <!-- ═══ DISCIPLINAS ═══════════════════════════════════════════ -->
+  <% if (table === 'disciplina') { %>
+    <h2>Disciplinas</h2>
+    <div class="table-scroll">
+      <table>
+        <tr><th>ID</th><th>Disciplina</th><th>Sigla</th><th>Ações</th></tr>
+        <% disciplinas.forEach(d => { %>
+          <tr>
+            <td><%= d.IdDisciplina %></td>
+            <td><%= d.Disciplina %></td>
+            <td><%= d.Sigla %></td>
+            <td class="actions">
+              <a class="table-action-btn" href="/gestor?table=disciplina&action=edit&id=<%= d.IdDisciplina %>">Editar</a>
+              <form class="inline" method="post" action="/gestor"
+                    onsubmit="return confirm('Remover disciplina?')">
+                <input type="hidden" name="table"         value="disciplina">
+                <input type="hidden" name="action"        value="delete">
+                <input type="hidden" name="IdDisciplina"  value="<%= d.IdDisciplina %>">
+                <button class="table-action-btn danger-button" type="submit">Excluir</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!disciplinas.length) { %>
+          <tr><td colspan="4">Nenhuma disciplina encontrada.</td></tr>
+        <% } %>
+      </table>
+    </div>
+
+    <div class="form-box">
+      <h3><%= editData ? 'Editar Disciplina' : 'Nova Disciplina' %></h3>
+      <form method="post" action="/gestor">
+        <input type="hidden" name="table"  value="disciplina">
+        <input type="hidden" name="action" value="<%= editData ? 'update' : 'create' %>">
+        <% if (editData) { %>
+          <input type="hidden" name="IdDisciplina" value="<%= editData.IdDisciplina %>">
+        <% } %>
+        <label>Disciplina</label><br>
+        <input type="text" name="Disciplina" maxlength="30" required
+               value="<%= editData ? editData.Disciplina : '' %>"><br>
+        <label>Sigla</label><br>
+        <input type="text" name="Sigla" maxlength="10" required
+               value="<%= editData ? editData.Sigla : '' %>"><br>
+        <button type="submit"><%= editData ? 'Atualizar' : 'Criar' %></button>
+        <% if (editData) { %><a class="cancel-link" href="/gestor?table=disciplina">Cancelar</a><% } %>
+      </form>
+    </div>
+  <% } %>
+
+  <!-- ═══ CURSOS ════════════════════════════════════════════════ -->
+  <% if (table === 'cursos') { %>
+    <h2>Cursos</h2>
+    <div class="table-scroll">
+      <table>
+        <tr><th>ID</th><th>Curso</th><th>Sigla</th><th>Ações</th></tr>
+        <% cursos.forEach(c => { %>
+          <tr>
+            <td><%= c.IdCurso %></td>
+            <td><%= c.Curso %></td>
+            <td><%= c.Sigla %></td>
+            <td class="actions">
+              <a class="table-action-btn" href="/gestor?table=cursos&action=edit&id=<%= c.IdCurso %>">Editar</a>
+              <form class="inline" method="post" action="/gestor"
+                    onsubmit="return confirm('Remover curso?')">
+                <input type="hidden" name="table"   value="cursos">
+                <input type="hidden" name="action"  value="delete">
+                <input type="hidden" name="IdCurso" value="<%= c.IdCurso %>">
+                <button class="table-action-btn danger-button" type="submit">Excluir</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!cursos.length) { %>
+          <tr><td colspan="4">Nenhum curso encontrado.</td></tr>
+        <% } %>
+      </table>
+    </div>
+
+    <div class="form-box">
+      <h3><%= editData ? 'Editar Curso' : 'Novo Curso' %></h3>
+      <form method="post" action="/gestor">
+        <input type="hidden" name="table"  value="cursos">
+        <input type="hidden" name="action" value="<%= editData ? 'update' : 'create' %>">
+        <% if (editData) { %>
+          <input type="hidden" name="IdCurso" value="<%= editData.IdCurso %>">
+        <% } %>
+        <label>Curso</label><br>
+        <input type="text" name="Curso" maxlength="150" required
+               value="<%= editData ? editData.Curso : '' %>"><br>
+        <label>Sigla</label><br>
+        <input type="text" name="Sigla" maxlength="10" required
+               value="<%= editData ? editData.Sigla : '' %>"><br>
+        <button type="submit"><%= editData ? 'Atualizar' : 'Criar' %></button>
+        <% if (editData) { %><a class="cancel-link" href="/gestor?table=cursos">Cancelar</a><% } %>
+      </form>
+    </div>
+  <% } %>
+
+  <!-- ═══ MATRÍCULAS ═══════════════════════════════════════════ -->
+  <% if (table === 'matriculas') { %>
+    <h2>Matrículas</h2>
+
+    <!-- Filtros -->
+    <form method="get" action="/gestor" class="filters-row">
+      <input type="hidden" name="table" value="matriculas">
+      <div>
+        <label>Pesquisar</label><br>
+        <input type="text" name="q" placeholder="ID ou nome" value="<%= typeof q !== 'undefined' ? q : '' %>">
+      </div>
+      <div>
+        <label>Curso</label><br>
+        <select name="filtro_curso">
+          <option value="0">Todos</option>
+          <% cursos.forEach(c => { %>
+            <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div><button type="submit">Filtrar</button></div>
+    </form>
+
+    <div class="table-scroll">
+      <table>
+        <tr>
+          <th>ID</th><th>Nome</th><th>Curso</th><th>Nascimento</th>
+          <th>Email</th><th>Telefone</th><th>Estado</th><th>Foto</th><th>Ações</th>
+        </tr>
+        <% rowsMatriculas.forEach(m => { %>
+          <tr>
+            <td><%= m.IdAluno %></td>
+            <td><%= m.Nome %></td>
+            <td><%= m.Curso %></td>
+            <td><%= formatDatePt(m.DataNascimento) %></td>
+            <td><%= m.Email || '' %></td>
+            <td><%= m.Telefone || '' %></td>
+            <td><%= m.EstadoValidacao || 'Pendente' %></td>
+            <td>
+              <img class="aluno-foto"
+                   src="/gestor?table=matriculas&action=foto&id_aluno=<%= m.IdAluno %>"
+                   alt="Foto" onerror="this.style.display='none'">
+            </td>
+            <td class="actions">
+              <a class="table-action-btn" href="/gestor?table=matriculas&action=edit&id_aluno=<%= m.IdAluno %>">Editar</a>
+              <a class="table-action-btn" href="/gestor?table=matriculas&action=ficha&id_aluno=<%= m.IdAluno %>">Ver ficha</a>
+              <!-- Aprovar -->
+              <form class="inline" method="post" action="/gestor">
+                <input type="hidden" name="table"           value="matriculas">
+                <input type="hidden" name="action"          value="set_validation">
+                <input type="hidden" name="IdAluno"         value="<%= m.IdAluno %>">
+                <input type="hidden" name="EstadoValidacao" value="Aprovada">
+                <button class="table-action-btn" type="submit">Aprovar</button>
+              </form>
+              <!-- Rejeitar -->
+              <form class="inline" method="post" action="/gestor"
+                    onsubmit="return confirm('Rejeitar esta ficha?')">
+                <input type="hidden" name="table"           value="matriculas">
+                <input type="hidden" name="action"          value="set_validation">
+                <input type="hidden" name="IdAluno"         value="<%= m.IdAluno %>">
+                <input type="hidden" name="EstadoValidacao" value="Rejeitada">
+                <button class="table-action-btn danger-button" type="submit">Rejeitar</button>
+              </form>
+              <!-- Excluir -->
+              <form class="inline" method="post" action="/gestor"
+                    onsubmit="return confirm('Remover matrícula?')">
+                <input type="hidden" name="table"   value="matriculas">
+                <input type="hidden" name="action"  value="delete">
+                <input type="hidden" name="IdAluno" value="<%= m.IdAluno %>">
+                <button class="table-action-btn danger-button" type="submit">Excluir</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!rowsMatriculas.length) { %>
+          <tr><td colspan="9">Sem resultados.</td></tr>
+        <% } %>
+      </table>
+    </div>
+
+    <!-- Formulário criar/editar matrícula -->
+    <div class="form-box">
+      <h3><%= editData ? 'Editar Matrícula' : 'Nova Matrícula' %></h3>
+      <form method="post" action="/gestor" enctype="multipart/form-data">
+        <input type="hidden" name="table"  value="matriculas">
+        <input type="hidden" name="action" value="<%= editData ? 'update' : 'create' %>">
+
+        <label>ID Aluno</label><br>
+        <input type="number" name="IdAluno" min="1" required
+               value="<%= editData ? editData.IdAluno : '' %>"
+               <%= editData ? 'readonly' : '' %>><br>
+
+        <label>Nome</label><br>
+        <input type="text" name="Nome" maxlength="25" required
+               value="<%= editData ? editData.Nome : '' %>"><br>
+
+        <label>Curso</label><br>
+        <select name="IdCurso" required>
+          <option value="">Selecione</option>
+          <% cursos.forEach(c => { %>
+            <option value="<%= c.IdCurso %>"
+              <%= editData && editData.IdCurso == c.IdCurso ? 'selected' : '' %>>
+              <%= c.Curso %>
+            </option>
+          <% }) %>
+        </select><br>
+
+        <label>Estado de validação</label><br>
+        <select name="EstadoValidacao" required>
+          <% ['Pendente','Aprovada','Rejeitada'].forEach(e => { %>
+            <option value="<%= e %>"
+              <%= editData && editData.EstadoValidacao === e ? 'selected' : (e === 'Pendente' && !editData ? 'selected' : '') %>>
+              <%= e %>
+            </option>
+          <% }) %>
+        </select><br>
+
+        <label>Data de nascimento</label><br>
+        <input type="date" name="DataNascimento" required max="<%= dataMaximaNascimento %>"
+               value="<%= editData ? editData.DataNascimento : '' %>"><br>
+
+        <label>Morada</label><br>
+        <input type="text" name="Morada" maxlength="255" required
+               value="<%= editData ? (editData.Morada || '') : '' %>"><br>
+
+        <label>Email</label><br>
+        <input type="email" name="Email" maxlength="120" required
+               value="<%= editData ? (editData.Email || '') : '' %>"><br>
+
+        <label>Contacto telefónico</label><br>
+        <input type="text" name="Telefone" maxlength="20" required
+               value="<%= editData ? (editData.Telefone || '') : '' %>"><br>
+
+        <label>Foto <% if (editData) { %>(opcional)<% } %></label><br>
+        <input type="file" name="Foto" accept=".jpg,.png"
+               <%= !editData ? 'required' : '' %>><br>
+
+        <button type="submit"><%= editData ? 'Atualizar' : 'Criar' %></button>
+        <% if (editData) { %>
+          <a class="cancel-link" href="/gestor?table=matriculas">Cancelar</a>
+        <% } %>
+      </form>
+    </div>
+  <% } %>
+
+  <!-- ═══ PLANO DE ESTUDOS ══════════════════════════════════════ -->
+  <% if (table === 'plano_estudos') { %>
+    <h2>Plano de Estudos</h2>
+    <div class="table-scroll">
+      <table>
+        <tr><th>Disciplina</th><th>Curso</th><th>Ano</th><th>Semestre</th><th>Ações</th></tr>
+        <% rowsPlano.forEach(row => { %>
+          <tr>
+            <td><%= row.Disciplina %></td>
+            <td><%= row.Curso %></td>
+            <td><%= row.Ano %></td>
+            <td><%= row.Semestre %></td>
+            <td class="actions">
+              <a class="table-action-btn"
+                 href="/gestor?table=plano_estudos&action=edit&id_disciplina=<%= row.IdDisciplina %>&id_curso=<%= row.IdCurso %>">
+                Editar
+              </a>
+              <form class="inline" method="post" action="/gestor"
+                    onsubmit="return confirm('Remover ligação?')">
+                <input type="hidden" name="table"       value="plano_estudos">
+                <input type="hidden" name="action"      value="delete">
+                <input type="hidden" name="IdDisciplina" value="<%= row.IdDisciplina %>">
+                <input type="hidden" name="IdCurso"     value="<%= row.IdCurso %>">
+                <button class="table-action-btn danger-button" type="submit">Excluir</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!rowsPlano.length) { %>
+          <tr><td colspan="5">Nenhuma ligação no plano de estudos.</td></tr>
+        <% } %>
+      </table>
+    </div>
+
+    <div class="form-box">
+      <h3><%= editData ? 'Editar Ligação' : 'Nova Ligação' %></h3>
+      <form method="post" action="/gestor">
+        <input type="hidden" name="table"  value="plano_estudos">
+        <input type="hidden" name="action" value="<%= editData ? 'update' : 'create' %>">
+        <% if (editData) { %>
+          <input type="hidden" name="old_IdDisciplina" value="<%= editData.IdDisciplina %>">
+          <input type="hidden" name="old_IdCurso"      value="<%= editData.IdCurso %>">
+        <% } %>
+
+        <label>Disciplina</label><br>
+        <select name="IdDisciplina" required>
+          <option value="">Selecione</option>
+          <% disciplinas.forEach(d => { %>
+            <option value="<%= d.IdDisciplina %>"
+              <%= editData && editData.IdDisciplina == d.IdDisciplina ? 'selected' : '' %>>
+              <%= d.Disciplina %>
+            </option>
+          <% }) %>
+        </select><br>
+
+        <label>Curso</label><br>
+        <select name="IdCurso" required>
+          <option value="">Selecione</option>
+          <% cursos.forEach(c => { %>
+            <option value="<%= c.IdCurso %>"
+              <%= editData && editData.IdCurso == c.IdCurso ? 'selected' : '' %>>
+              <%= c.Curso %>
+            </option>
+          <% }) %>
+        </select><br>
+
+        <label>Ano</label><br>
+        <input type="number" name="Ano" min="1" max="10" required
+               value="<%= editData ? (editData.Ano || 1) : 1 %>"><br>
+
+        <label>Semestre</label><br>
+        <select name="Semestre" required>
+          <option value="1" <%= !editData || editData.Semestre == 1 ? 'selected' : '' %>>1</option>
+          <option value="2" <%= editData && editData.Semestre == 2 ? 'selected' : '' %>>2</option>
+        </select><br>
+
+        <button type="submit"><%= editData ? 'Atualizar' : 'Criar' %></button>
+        <% if (editData) { %>
+          <a class="cancel-link" href="/gestor?table=plano_estudos">Cancelar</a>
+        <% } %>
+      </form>
+    </div>
+  <% } %>
+</div>
+</body>
+</html>
