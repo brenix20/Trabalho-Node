@@ -87,8 +87,13 @@ const PORT = parseInt(process.env.PORT, 10) || 3000;
 
 async function start() {
   if (process.env.MONGODB_URI) {
-    await connectMongo();
-    console.log('✅  MongoDB ligado com sucesso.');
+    try {
+      await connectMongo();
+      console.log('✅  MongoDB ligado com sucesso.');
+    } catch (mongoError) {
+      console.warn('⚠️  Aviso: Falha ao conectar MongoDB. App rodando em modo de teste.');
+      console.warn('   Detalhes:', mongoError.message);
+    }
   } else {
     console.log('ℹ️  MONGODB_URI não definido; app em modo MySQL legado.');
   }

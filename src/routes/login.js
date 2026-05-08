@@ -12,14 +12,23 @@ const DEFAULT_PERFIS = [
 ];
 
 async function ensureDefaultPerfis() {
-  const total = await Perfil.countDocuments();
-  if (total > 0) return;
-  await Perfil.insertMany(DEFAULT_PERFIS, { ordered: true });
+  try {
+    const total = await Perfil.countDocuments();
+    if (total > 0) return;
+    await Perfil.insertMany(DEFAULT_PERFIS, { ordered: true });
+  } catch (err) {
+    console.warn('⚠️  Não foi possível verificar perfis no banco. Usando defaults.');
+  }
 }
 
 async function getPerfisDocs() {
-  await ensureDefaultPerfis();
-  return Perfil.find().sort({ perfil: 1 }).lean();
+  try {
+    await ensureDefaultPerfis();
+    return await Perfil.find().sort({ perfil: 1 }).lean();
+  } catch (err) {
+    console.warn('⚠️  Erro ao buscar perfis. Usando perfis padrão.');
+    return DEFAULT_PERFIS;
+  }
 }
 
 function mapPerfisForView(perfisDocs) {

@@ -4,13 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login — IPCAVNF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="login-page">
   <div class="login-card">
     <div style="text-align: center; margin-bottom: 2rem;">
-      <i class="fas fa-graduation-cap" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem; display: block;"></i>
+      <i class="fas fa-graduation-cap" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem; display: block;"></i>
       <h1>IPCAVNF</h1>
       <p class="subtitle">Sistema de Gestão Académica</p>
     </div>
@@ -22,106 +25,179 @@
       </div>
     <% } %>
 
-    <!-- Entrar -->
-    <form method="post" action="/login">
-      <input type="hidden" name="form_action" value="login">
-      <h2 class="auth-title"><i class="fas fa-sign-in-alt"></i> Aceder</h2>
-      
-      <label for="utilizador"><i class="fas fa-user"></i> Utilizador</label>
-      <input id="utilizador" name="utilizador" type="text" required placeholder="Insira o seu utilizador" value="<%= loginInput %>">
-      
-      <label for="senha"><i class="fas fa-lock"></i> Palavra-passe</label>
-      <input id="senha" name="senha" type="password" required placeholder="Insira a sua palavra-passe">
-      
-      <button type="submit" style="width: 100%; margin-top: 1rem;">
-        <i class="fas fa-arrow-right"></i> Entrar
+    <!-- Abas de Navegação -->
+    <div class="auth-tabs">
+      <button class="tab-btn active" data-tab="tab-aceder">
+        <i class="fas fa-sign-in-alt"></i> Aceder
       </button>
-    </form>
-
-    <!-- Esqueceu password -->
-    <div style="text-align: center; margin-top: 1.5rem;">
-      <button id="toggle_esqueceu" class="secondary-button" type="button" style="background: #8b5cf6; width: 100%;"
-              aria-controls="bloco_esqueceu_password"
-              aria-expanded="<%= mostrarEsqueceu ? 'true' : 'false' %>">
-        <i class="fas fa-key"></i> Recuperar palavra-passe
+      <button class="tab-btn" data-tab="tab-registar">
+        <i class="fas fa-user-plus"></i> Registar
+      </button>
+      <button class="tab-btn" data-tab="tab-perfil">
+        <i class="fas fa-user-tag"></i> Tipo de Perfil
       </button>
     </div>
 
-    <div id="bloco_esqueceu_password" <%= mostrarEsqueceu ? '' : 'hidden' %> style="margin-top: 1.5rem;">
-      <div class="auth-divider"><span>recuperar acesso</span></div>
+    <!-- TAB 1: ACEDER -->
+    <div id="tab-aceder" class="auth-tab-content active">
       <form method="post" action="/login">
-        <input type="hidden" name="form_action" value="forgot_password">
-        <h2 class="auth-title"><i class="fas fa-redo-alt"></i> Redefinir Palavra-passe</h2>
+        <input type="hidden" name="form_action" value="login">
+        <h2 class="auth-title"><i class="fas fa-sign-in-alt"></i> Aceder à sua Conta</h2>
         
-        <label for="utilizador_esqueceu"><i class="fas fa-user"></i> Utilizador</label>
-        <input id="utilizador_esqueceu" name="utilizador_esqueceu" type="text" required 
-               placeholder="Insira o seu utilizador"
-               value="<%= utilizadorEsqueceuInput %>">
+        <label for="utilizador"><i class="fas fa-user"></i> Utilizador</label>
+        <input id="utilizador" name="utilizador" type="text" required placeholder="Insira o seu utilizador" value="<%= loginInput %>">
         
-        <label for="nova_senha_esqueceu"><i class="fas fa-lock"></i> Nova palavra-passe</label>
-        <input id="nova_senha_esqueceu" name="nova_senha_esqueceu" type="password"
+        <label for="senha"><i class="fas fa-lock"></i> Palavra-passe</label>
+        <input id="senha" name="senha" type="password" required placeholder="Insira a sua palavra-passe">
+        
+        <button type="submit" style="width: 100%; margin-top: 1rem;">
+          <i class="fas fa-arrow-right"></i> Entrar
+        </button>
+      </form>
+
+      <!-- Esqueceu password -->
+      <div style="text-align: center; margin-top: 1.5rem;">
+        <button id="toggle_esqueceu" class="btn-accent" type="button" style="width: 100%;"
+                aria-controls="bloco_esqueceu_password"
+                aria-expanded="<%= mostrarEsqueceu ? 'true' : 'false' %>">
+          <i class="fas fa-key"></i> Recuperar palavra-passe
+        </button>
+      </div>
+
+      <div id="bloco_esqueceu_password" <%= mostrarEsqueceu ? '' : 'hidden' %> style="margin-top: 1.5rem;">
+        <div class="auth-divider"><span>recuperar acesso</span></div>
+        <form method="post" action="/login">
+          <input type="hidden" name="form_action" value="forgot_password">
+          <h2 class="auth-title"><i class="fas fa-redo-alt"></i> Redefinir Palavra-passe</h2>
+          
+          <label for="utilizador_esqueceu"><i class="fas fa-user"></i> Utilizador</label>
+          <input id="utilizador_esqueceu" name="utilizador_esqueceu" type="text" required 
+                 placeholder="Insira o seu utilizador"
+                 value="<%= utilizadorEsqueceuInput %>">
+          
+          <label for="nova_senha_esqueceu"><i class="fas fa-lock"></i> Nova palavra-passe</label>
+          <input id="nova_senha_esqueceu" name="nova_senha_esqueceu" type="password"
+                 minlength="12" maxlength="128" autocomplete="new-password" required
+                 placeholder="Mínimo 12 caracteres">
+          
+          <label for="confirmar_senha_esqueceu"><i class="fas fa-lock"></i> Confirmar palavra-passe</label>
+          <input id="confirmar_senha_esqueceu" name="confirmar_senha_esqueceu" type="password"
+                 minlength="12" maxlength="128" autocomplete="new-password" required
+                 placeholder="Confirme a palavra-passe">
+          
+          <p class="subtitle" style="margin-top: 0.75rem;">
+            <i class="fas fa-info-circle"></i> Mínimo 12 caracteres com maiúsculas, minúsculas, números e símbolos.
+          </p>
+          
+          <button type="submit" style="width: 100%; margin-top: 1rem;">
+            <i class="fas fa-check"></i> Atualizar Palavra-passe
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB 2: REGISTAR -->
+    <div id="tab-registar" class="auth-tab-content">
+      <form method="post" action="/login">
+        <input type="hidden" name="form_action" value="register">
+        <h2 class="auth-title"><i class="fas fa-user-plus"></i> Criar Nova Conta</h2>
+        
+        <label for="novo_utilizador"><i class="fas fa-user"></i> Novo utilizador</label>
+        <input id="novo_utilizador" name="novo_utilizador" type="text" maxlength="40" required
+               placeholder="Escolha um utilizador" value="<%= novoUtilizadorInput %>">
+        
+        <label for="nova_senha"><i class="fas fa-lock"></i> Palavra-passe</label>
+        <input id="nova_senha" name="nova_senha" type="password"
                minlength="12" maxlength="128" autocomplete="new-password" required
                placeholder="Mínimo 12 caracteres">
         
-        <label for="confirmar_senha_esqueceu"><i class="fas fa-lock"></i> Confirmar palavra-passe</label>
-        <input id="confirmar_senha_esqueceu" name="confirmar_senha_esqueceu" type="password"
+        <label for="confirmar_senha"><i class="fas fa-lock"></i> Confirmar Palavra-passe</label>
+        <input id="confirmar_senha" name="confirmar_senha" type="password"
                minlength="12" maxlength="128" autocomplete="new-password" required
                placeholder="Confirme a palavra-passe">
-        
-        <p class="subtitle" style="margin-top: 0.75rem;">
-          <i class="fas fa-info-circle"></i> Mínimo 12 caracteres com maiúsculas, minúsculas, números e símbolos.
-        </p>
-        
-        <button type="submit" style="width: 100%; margin-top: 1rem; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
-          <i class="fas fa-check"></i> Atualizar Palavra-passe
-        </button>
-      </form>
-    </div>
-
-    <div class="auth-divider"><span>criar nova conta</span></div>
-
-    <!-- Criar conta -->
-    <form method="post" action="/login">
-      <input type="hidden" name="form_action" value="register">
-      <h2 class="auth-title"><i class="fas fa-user-plus"></i> Registar</h2>
-      
-      <label for="novo_utilizador"><i class="fas fa-user"></i> Novo utilizador</label>
-      <input id="novo_utilizador" name="novo_utilizador" type="text" maxlength="40" required
-             placeholder="Escolha um utilizador" value="<%= novoUtilizadorInput %>">
-      
-      <label for="nova_senha"><i class="fas fa-lock"></i> Palavra-passe</label>
-      <input id="nova_senha" name="nova_senha" type="password"
-             minlength="12" maxlength="128" autocomplete="new-password" required
-             placeholder="Mínimo 12 caracteres">
-      
-      <label for="confirmar_senha"><i class="fas fa-lock"></i> Confirmar Palavra-passe</label>
-      <input id="confirmar_senha" name="confirmar_senha" type="password"
-             minlength="12" maxlength="128" autocomplete="new-password" required
-             placeholder="Confirme a palavra-passe">
       
       <p class="subtitle" style="margin-top: 0.75rem;">
         <i class="fas fa-info-circle"></i> Mínimo 12 caracteres com maiúsculas, minúsculas, números e símbolos.
       </p>
       
-      <label for="perfil"><i class="fas fa-user-tag"></i> Tipo de Perfil</label>
-      <select id="perfil" name="perfil" required>
-        <option value="">— Selecione um perfil —</option>
-        <% perfis.forEach(p => { %>
-          <option value="<%= p.IdPerfis %>"
-              <%= String(perfilSelecionado) === String(p.IdPerfis) ? 'selected' : '' %>>
-            <i class="fas fa-<%= p.perfil === 'aluno' ? 'user-graduate' : p.perfil === 'funcionario' ? 'briefcase' : 'cog' %>"></i>
-            <%= p.perfil.charAt(0).toUpperCase() + p.perfil.slice(1) %>
-          </option>
-        <% }) %>
-      </select>
-      
-      <button type="submit" style="width: 100%; margin-top: 1rem;">
-        <i class="fas fa-user-check"></i> Criar Conta
-      </button>
-    </form>
+        <button type="submit" style="width: 100%; margin-top: 1rem;">
+          <i class="fas fa-user-check"></i> Criar Conta
+        </button>
+      </form>
+    </div>
+
+    <!-- TAB 3: TIPO DE PERFIL -->
+    <div id="tab-perfil" class="auth-tab-content">
+      <form method="post" action="/login">
+        <input type="hidden" name="form_action" value="register">
+        <h2 class="auth-title"><i class="fas fa-user-tag"></i> Selecione o Tipo de Perfil</h2>
+        
+        <p class="subtitle" style="margin-bottom: 1.5rem;">
+          <i class="fas fa-info-circle"></i> Escolha o tipo de perfil antes de preencher os dados de registo.
+        </p>
+
+        <div class="profile-selector">
+          <% perfis.forEach(p => { %>
+            <label class="profile-card">
+              <input type="radio" name="perfil" value="<%= p.IdPerfis %>" 
+                     <%= String(perfilSelecionado) === String(p.IdPerfis) ? 'checked' : '' %> required>
+              <div class="profile-card-inner">
+                <i class="fas fa-<%= p.perfil === 'aluno' ? 'user-graduate' : p.perfil === 'funcionario' ? 'briefcase' : 'cog' %>"></i>
+                <span class="profile-name"><%= p.perfil.charAt(0).toUpperCase() + p.perfil.slice(1) %></span>
+                <span class="profile-desc">
+                  <% if (p.perfil === 'aluno') { %>
+                    Acesso como Estudante
+                  <% } else if (p.perfil === 'funcionario') { %>
+                    Acesso como Funcionário
+                  <% } else { %>
+                    Acesso de Gestor
+                  <% } %>
+                </span>
+              </div>
+            </label>
+          <% }) %>
+        </div>
+
+        <div id="perfil-info" class="perfil-info-box" style="margin-top: 1.5rem; display: none;">
+          <h3 style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"></i> Perfil Selecionado</h3>
+          <p id="perfil-info-text"></p>
+        </div>
+
+        <button type="submit" style="width: 100%; margin-top: 1.5rem;">
+          <i class="fas fa-arrow-right"></i> Continuar com este Perfil
+        </button>
+      </form>
+    </div>
   </div>
 
   <script>
+    // ── Tabs Navigation ──────────────────────────────────────────
+    (function () {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.auth-tab-content');
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault();
+          const targetTab = this.getAttribute('data-tab');
+          console.log('Clicado no tab:', targetTab);
+          
+          // Remove active from all tabs and contents
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+          
+          // Add active to clicked tab and corresponding content
+          this.classList.add('active');
+          const targetElement = document.getElementById(targetTab);
+          console.log('Alvo encontrado:', targetElement);
+          if (targetElement) {
+            targetElement.classList.add('active');
+          }
+        });
+      });
+    })();
+
+    // ── Toggle Forgot Password ───────────────────────────────────
     (function () {
       var btn   = document.getElementById('toggle_esqueceu');
       var bloco = document.getElementById('bloco_esqueceu_password');
@@ -131,6 +207,35 @@
         bloco.hidden = visivel;
         btn.setAttribute('aria-expanded', visivel ? 'false' : 'true');
       });
+    })();
+
+    // ── Profile Selection Info ───────────────────────────────────
+    (function () {
+      const radios = document.querySelectorAll('input[name="perfil"]');
+      const infoBox = document.getElementById('perfil-info');
+      const infoText = document.getElementById('perfil-info-text');
+      const descriptions = {
+        // Assume the first perfil is aluno, second is funcionario, third is gestor
+        // This will be dynamic based on your perfis data
+      };
+
+      radios.forEach(radio => {
+        radio.addEventListener('change', function () {
+          const selectedLabel = this.closest('.profile-card').querySelector('.profile-name');
+          const selectedDesc = this.closest('.profile-card').querySelector('.profile-desc');
+          
+          if (selectedLabel && selectedDesc && infoBox) {
+            infoText.textContent = selectedDesc.textContent;
+            infoBox.style.display = 'block';
+          }
+        });
+      });
+
+      // Show info for pre-selected profile if any
+      const checkedRadio = document.querySelector('input[name="perfil"]:checked');
+      if (checkedRadio) {
+        checkedRadio.dispatchEvent(new Event('change'));
+      }
     })();
   </script>
 </body>
