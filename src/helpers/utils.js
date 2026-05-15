@@ -1,14 +1,18 @@
 'use strict';
 
 /**
- * Formata uma data YYYY-MM-DD para DD/MM/YYYY (equivalente a formatDatePt)
+ * Formata uma data para DD/MM/YYYY.
  */
 function formatDatePt(dateValue) {
   if (!dateValue) return '';
-  const s = String(dateValue).trim().slice(0, 10);
-  const match = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!match) return dateValue;
-  return `${match[3]}/${match[2]}/${match[1]}`;
+
+  const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+  if (!Number.isFinite(date.getTime())) return dateValue;
+
+  const day = date.getDate();
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
 /**
@@ -52,8 +56,7 @@ function validarEmail(value) {
 function validarTelefone(value) {
   const tel = String(value || '').trim();
   if (!tel) throw new Error('O contacto telefónico é obrigatório.');
-  if (tel.length < 9 || tel.length > 20) throw new Error('O contacto telefónico deve ter entre 9 e 20 caracteres.');
-  if (!/^[0-9+\s()\-]+$/.test(tel)) throw new Error('O contacto telefónico contém caracteres inválidos.');
+  if (!/^\d{1,9}$/.test(tel)) throw new Error('O contacto telefónico deve ter no máximo 9 números.');
   return tel;
 }
 

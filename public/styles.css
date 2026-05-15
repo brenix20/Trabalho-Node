@@ -575,9 +575,10 @@ tbody tr:hover td {
 
 /* ── FICHA BOX ──────────────────────────────────────────── */
 .ficha-box {
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 1.75rem;
+  align-items: start;
   background: var(--background);
   border: 2px solid var(--border);
   border-radius: var(--radius-lg);
@@ -586,9 +587,15 @@ tbody tr:hover td {
   box-shadow: none;
 }
 
+.ficha-foto {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
 .ficha-foto img {
-  width: 140px;
-  height: 160px;
+  width: 180px;
+  height: 220px;
   object-fit: cover;
   border-radius: var(--radius-lg);
   border: 3px solid var(--primary);
@@ -599,13 +606,14 @@ tbody tr:hover td {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .ficha-dados p {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
   gap: 0.75rem;
+  align-items: baseline;
   font-size: 0.95rem;
   margin: 0;
 }
@@ -613,7 +621,6 @@ tbody tr:hover td {
 .ficha-dados p strong {
   color: var(--primary);
   font-weight: var(--font-bold);
-  min-width: 150px;
   text-transform: uppercase;
   font-size: 0.85rem;
   letter-spacing: 0.05em;
@@ -685,6 +692,8 @@ tbody tr:hover td {
   margin-bottom: 2rem;
   border-bottom: 2px solid var(--border);
   overflow-x: auto;
+  width: 100%;
+  justify-content: center;
 }
 
 .tab-btn {
@@ -723,7 +732,7 @@ tbody tr:hover td {
   animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
+.auth-tab-content form {
   from {
     opacity: 0;
   }
@@ -751,6 +760,67 @@ tbody tr:hover td {
   position: relative;
   top: -1.5rem;
   display: inline-block;
+}
+
+/* ── PROFILE SELECTOR ───────────────────────────────────── */
+.profile-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  background: var(--background);
+}
+
+.profile-card:hover {
+  border-color: var(--primary);
+  background: var(--muted);
+}
+
+.profile-card input[type="radio"] {
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  accent-color: var(--primary);
+}
+
+.profile-card input[type="radio"]:checked + .profile-card-inner {
+  color: var(--primary);
+  font-weight: var(--font-semibold);
+}
+
+.profile-card-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.profile-card-inner i {
+  font-size: 1.5rem;
+  color: var(--primary);
+}
+
+.profile-name {
+  font-weight: var(--font-semibold);
+  color: var(--foreground);
+}
+
+.profile-desc {
+  font-size: 0.85rem;
+  color: var(--foreground);
+  opacity: 0.7;
 }
 
 /* ── FILTERS ROW ────────────────────────────────────────── */
@@ -801,8 +871,12 @@ tbody tr:hover td {
 }
 
 .table-action-btn.view {
-  background: var(--secondary);
+  background: var(--primary);
   color: var(--background);
+  width: auto;
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.85rem;
+  min-height: 2.25rem;
 }
 
 .table-action-btn:hover {
@@ -837,6 +911,77 @@ tbody tr:hover td {
 .section-link {
   color: var(--primary);
   font-weight: var(--font-semibold);
+}
+
+/* ── FICHA ALUNO (Student Record) ─────────────────────── */
+.ficha-box {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 1.75rem;
+  align-items: start;
+  background: var(--muted);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.ficha-foto {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.ficha-foto img {
+  width: 180px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--border);
+}
+
+.ficha-dados {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.ficha-dados p {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.ficha-dados strong {
+  color: var(--foreground);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+.cancel-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--foreground);
+  text-decoration: none;
+  font-weight: var(--font-medium);
+  transition: var(--transition-fast);
+}
+
+.cancel-link:hover {
+  background: var(--border);
+  color: var(--primary);
 }
 
 /* ── GEOMETRIC DECORATIVE SHAPES ────────────────────────── */
@@ -898,8 +1043,8 @@ tbody tr:hover td {
   h3 { font-size: 1.25rem; }
 
   .ficha-box {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: 1fr;
+    justify-items: center;
   }
 
   .ficha-dados {
@@ -961,7 +1106,121 @@ tbody tr:hover td {
   h3 { font-size: 1rem; }
 
   .ficha-foto img {
-    width: 100px;
-    height: 120px;
+    width: 140px;
+    height: 170px;
   }
+
+  .ficha-dados p {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
+
+/* ═══ TABELAS E BADGES ═════════════════════════════════════════ */
+.table-container {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.table thead {
+  background-color: var(--primary);
+  color: white;
+}
+
+.table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--primary);
+}
+
+.table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.table tbody tr:hover {
+  background-color: var(--muted);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.badge-success {
+  background-color: var(--secondary);
+  color: white;
+}
+
+.badge-warning {
+  background-color: var(--accent);
+  color: white;
+}
+
+.badge-danger {
+  background-color: var(--danger);
+  color: white;
+}
+
+.badge-info {
+  background-color: var(--primary);
+  color: white;
+}
+
+.badge-estado {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-estado-pendente {
+  background-color: var(--accent);
+  color: var(--foreground);
+}
+
+.badge-estado-aprovada {
+  background-color: var(--secondary);
+  color: var(--background);
+}
+
+.badge-estado-rejeitada {
+  background-color: var(--danger);
+  color: var(--background);
+}
+
+.btn-small {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: var(--primary);
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-small:hover {
+  background-color: #2563EB;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }

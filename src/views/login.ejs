@@ -33,17 +33,12 @@
       <button class="tab-btn" data-tab="tab-registar">
         <i class="fas fa-user-plus"></i> Registar
       </button>
-      <button class="tab-btn" data-tab="tab-perfil">
-        <i class="fas fa-user-tag"></i> Tipo de Perfil
-      </button>
     </div>
 
     <!-- TAB 1: ACEDER -->
     <div id="tab-aceder" class="auth-tab-content active">
       <form method="post" action="/login">
-        <input type="hidden" name="form_action" value="login">
-        <h2 class="auth-title"><i class="fas fa-sign-in-alt"></i> Aceder à sua Conta</h2>
-        
+    
         <label for="utilizador"><i class="fas fa-user"></i> Utilizador</label>
         <input id="utilizador" name="utilizador" type="text" required placeholder="Insira o seu utilizador" value="<%= loginInput %>">
         
@@ -102,6 +97,29 @@
         <input type="hidden" name="form_action" value="register">
         <h2 class="auth-title"><i class="fas fa-user-plus"></i> Criar Nova Conta</h2>
         
+        <label style="display: block; margin-bottom: 1rem; margin-top: 1.5rem;"><i class="fas fa-user-tag"></i> Tipo de Perfil</label>
+        <div class="profile-selector">
+          <% perfis.forEach(p => { %>
+            <label class="profile-card">
+              <input type="radio" name="perfil" value="<%= p.IdPerfis %>" 
+                     <%= String(perfilSelecionado) === String(p.IdPerfis) ? 'checked' : '' %> required>
+              <div class="profile-card-inner">
+                <i class="fas fa-<%= p.perfil === 'aluno' ? 'user-graduate' : p.perfil === 'funcionario' ? 'briefcase' : 'cog' %>"></i>
+                <span class="profile-name">
+                  <% if (p.perfil === 'aluno') { %>
+                    Aluno
+                  <% } else if (p.perfil === 'funcionario') { %>
+                    Funcionário
+                  <% } else { %>
+                    Gestor
+                  <% } %>
+                </span>
+              </div>
+            </label>
+          <% }) %>
+        </div>
+        
+        <div class="auth-divider"><span>preencha os seus dados</span></div>
         <label for="novo_utilizador"><i class="fas fa-user"></i> Novo utilizador</label>
         <input id="novo_utilizador" name="novo_utilizador" type="text" maxlength="40" required
                placeholder="Escolha um utilizador" value="<%= novoUtilizadorInput %>">
@@ -122,49 +140,6 @@
       
         <button type="submit" style="width: 100%; margin-top: 1rem;">
           <i class="fas fa-user-check"></i> Criar Conta
-        </button>
-      </form>
-    </div>
-
-    <!-- TAB 3: TIPO DE PERFIL -->
-    <div id="tab-perfil" class="auth-tab-content">
-      <form method="post" action="/login">
-        <input type="hidden" name="form_action" value="register">
-        <h2 class="auth-title"><i class="fas fa-user-tag"></i> Selecione o Tipo de Perfil</h2>
-        
-        <p class="subtitle" style="margin-bottom: 1.5rem;">
-          <i class="fas fa-info-circle"></i> Escolha o tipo de perfil antes de preencher os dados de registo.
-        </p>
-
-        <div class="profile-selector">
-          <% perfis.forEach(p => { %>
-            <label class="profile-card">
-              <input type="radio" name="perfil" value="<%= p.IdPerfis %>" 
-                     <%= String(perfilSelecionado) === String(p.IdPerfis) ? 'checked' : '' %> required>
-              <div class="profile-card-inner">
-                <i class="fas fa-<%= p.perfil === 'aluno' ? 'user-graduate' : p.perfil === 'funcionario' ? 'briefcase' : 'cog' %>"></i>
-                <span class="profile-name"><%= p.perfil.charAt(0).toUpperCase() + p.perfil.slice(1) %></span>
-                <span class="profile-desc">
-                  <% if (p.perfil === 'aluno') { %>
-                    Acesso como Estudante
-                  <% } else if (p.perfil === 'funcionario') { %>
-                    Acesso como Funcionário
-                  <% } else { %>
-                    Acesso de Gestor
-                  <% } %>
-                </span>
-              </div>
-            </label>
-          <% }) %>
-        </div>
-
-        <div id="perfil-info" class="perfil-info-box" style="margin-top: 1.5rem; display: none;">
-          <h3 style="margin-bottom: 0.5rem;"><i class="fas fa-check-circle"></i> Perfil Selecionado</h3>
-          <p id="perfil-info-text"></p>
-        </div>
-
-        <button type="submit" style="width: 100%; margin-top: 1.5rem;">
-          <i class="fas fa-arrow-right"></i> Continuar com este Perfil
         </button>
       </form>
     </div>

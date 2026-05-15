@@ -23,7 +23,9 @@ async function nextId(Model, field) {
 
 function toDateInput(d) {
   if (!d) return '';
-  return new Date(d).toISOString().slice(0, 10);
+  const date = d instanceof Date ? d : new Date(d);
+  if (!Number.isFinite(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
 }
 
 async function getLookups() {
@@ -50,8 +52,11 @@ router.get('/', async (req, res) => {
   }
 
   let editData = null;
-  let rowsMatriculas = [];
+  let rowsMatriculasAceites = [];
+  let rowsMatriculasPendentesRejeitadas = [];
   let rowsPlano = [];
+  let fichaDetalhes = null;
+  let fichaDisciplinas = [];
 
   if (table === 'disciplina' && action === 'edit') {
     editData = await Disciplina.findOne({ IdDisciplina: parseInt(req.query.id, 10) }).lean();
@@ -74,19 +79,36 @@ router.get('/', async (req, res) => {
 
     const raw = await Matricula.find(filtro).sort({ IdAluno: -1 }).lean();
     const courseMap = new Map((await Curso.find().select('IdCurso Curso').lean()).map((c) => [c.IdCurso, c.Curso]));
-    rowsMatriculas = raw.map((r) => ({
+    const mappedRows = raw.map((r) => ({
       ...r,
       Curso: courseMap.get(r.IdCurso) || '',
       DataNascimento: toDateInput(r.DataNascimento),
     }));
-
-    if (action === 'edit') {
-      const row = await Matricula.findOne({ IdAluno: parseInt(req.query.id_aluno, 10) }).lean();
-      editData = row ? { ...row, DataNascimento: toDateInput(row.DataNascimento) } : null;
-    }
+    rowsMatriculasAceites = mappedRows.filter((r) => r.EstadoValidacao === 'Aprovada');
+    rowsMatriculasPendentesRejeitadas = mappedRows.filter((r) => r.EstadoValidacao !== 'Aprovada');
 
     if (action === 'ficha') {
-      return redirectMsg(res, 'matriculas', 'error', 'Vista de ficha não disponível nesta versão.');
+      const idAluno = parseInt(req.query.id_aluno, 10);
+      const row = await Matricula.findOne({ IdAluno: idAluno }).lean();
+      if (!row) {
+        return redirectMsg(res, 'matriculas', 'error', 'Matrícula não encontrada.');
+      }
+
+      const curso = await Curso.findOne({ IdCurso: row.IdCurso }).select('Curso').lean();
+      const plano = await PlanoEstudo.find({ IdCurso: row.IdCurso }).select('IdDisciplina').lean();
+      const ids = plano.map((p) => p.IdDisciplina);
+      const disciplinas = await Disciplina.find({ IdDisciplina: { $in: ids } })
+        .sort({ Disciplina: 1 })
+        .select('Disciplina Sigla -_id')
+        .lean();
+
+      fichaDetalhes = {
+        ...row,
+        Curso: curso?.Curso || '-',
+        DataNascimentoFmt: formatDatePt(row.DataNascimento),
+        FotoBase64: row.Foto ? `data:image/jpeg;base64,${Buffer.from(row.Foto).toString('base64')}` : null,
+      };
+      fichaDisciplinas = disciplinas;
     }
   }
 
@@ -111,7 +133,8 @@ router.get('/', async (req, res) => {
   res.render('gestor/index', {
     table, action, mensagem, tipo, editData,
     disciplinas, cursos,
-    rowsMatriculas, rowsPlano,
+    rowsMatriculasAceites, rowsMatriculasPendentesRejeitadas, rowsPlano,
+    fichaDetalhes, fichaDisciplinas,
     dataMaximaNascimento: dataMaximaNascimento(),
     formatDatePt,
     sessao: req.session,
@@ -225,54 +248,29 @@ router.post('/', upload.single('Foto'), async (req, res) => {
       return redirectMsg(res, 'matriculas', 'success', 'Matrícula removida com sucesso.');
     }
 
-    if (postAction === 'update') {
-      const idAluno = parseInt(req.body.IdAluno, 10);
-      try {
-        const nome    = String(req.body.Nome || '').trim();
-        const idCurso = parseInt(req.body.IdCurso, 10);
-        const estado  = normalizarEstadoValidacao(req.body.EstadoValidacao || 'Pendente') || 'Pendente';
-        const dataNasc = validarDataNascimento(req.body.DataNascimento);
-        const morada   = String(req.body.Morada || '').trim();
-        const email    = validarEmail(req.body.Email);
-        const telefone = validarTelefone(req.body.Telefone);
-        const foto     = req.file ? req.file.buffer : null;
-
-        const payload = {
-          Nome: nome,
-          IdCurso: idCurso,
-          EstadoValidacao: estado,
-          DataNascimento: dataNasc,
-          Morada: morada,
-          Email: email,
-          Telefone: telefone,
-        };
-        if (foto) payload.Foto = foto;
-
-        await Matricula.updateOne({ IdAluno: idAluno }, { $set: payload });
-        return redirectMsg(res, 'matriculas', 'success', 'Matrícula atualizada com sucesso.');
-      } catch (e) {
-        return redirectMsg(res, 'matriculas', 'error', e.message);
-      }
-    }
-
     if (postAction === 'create') {
       try {
         const idAluno  = parseInt(req.body.IdAluno, 10);
         const nome     = String(req.body.Nome || '').trim();
         const idCurso  = parseInt(req.body.IdCurso, 10);
-        const estado   = normalizarEstadoValidacao(req.body.EstadoValidacao || 'Pendente') || 'Pendente';
         const dataNasc = validarDataNascimento(req.body.DataNascimento);
         const morada   = String(req.body.Morada || '').trim();
         const email    = validarEmail(req.body.Email);
         const telefone = validarTelefone(req.body.Telefone);
         const foto     = req.file ? req.file.buffer : null;
+
+        if (!idAluno) throw new Error('O ID do aluno é obrigatório.');
+        if (!nome) throw new Error('O nome é obrigatório.');
+        if (!idCurso) throw new Error('O curso é obrigatório.');
+        if (!morada) throw new Error('A morada é obrigatória.');
+        if (!foto) throw new Error('A foto é obrigatória.');
 
         await Matricula.create({
           IdAluno: idAluno,
           IdUser: idAluno,
           Nome: nome,
           IdCurso: idCurso,
-          EstadoValidacao: estado,
+          EstadoValidacao: 'Aprovada',
           DataNascimento: dataNasc,
           Morada: morada,
           Email: email,

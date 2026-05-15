@@ -12,6 +12,12 @@
 <%- include('../partials/navbar') %>
 
 <div class="main-container">
+  <% function estadoBadgeClass(estado) {
+      if (estado === 'Aprovada') return 'badge-estado badge-estado-aprovada';
+      if (estado === 'Rejeitada') return 'badge-estado badge-estado-rejeitada';
+      return 'badge-estado badge-estado-pendente';
+    } %>
+
   <% if (mensagem) { %>
     <div class="message <%= tipo %>"><%= mensagem %></div>
   <% } %>
@@ -47,18 +53,15 @@
             <td><%= p.Estado %></td>
             <td class="actions">
               <% if (p.Estado === 'Pendente') { %>
-                <form class="inline" method="post" action="/funcionario">
+                <form class="inline" method="post" action="/funcionario" style="display:flex; flex-direction:column; gap:0.4rem;">
                   <input type="hidden" name="post_action" value="decidir_pedido">
                   <input type="hidden" name="IdPedido"    value="<%= p.IdPedido %>">
-                  <input type="hidden" name="decisao"     value="validar">
-                  <button class="table-action-btn" type="submit">Aprovar</button>
-                </form>
-                <form class="inline" method="post" action="/funcionario"
-                      onsubmit="return confirm('Rejeitar este pedido?')">
-                  <input type="hidden" name="post_action" value="decidir_pedido">
-                  <input type="hidden" name="IdPedido"    value="<%= p.IdPedido %>">
-                  <input type="hidden" name="decisao"     value="rejeitar">
-                  <button class="table-action-btn danger-button" type="submit">Rejeitar</button>
+                  <label style="font-size:0.85rem; font-weight:600;">Observação</label>
+                  <textarea name="observacao_decisao" maxlength="255" rows="2" placeholder="Observação opcional" style="width:100%;"></textarea>
+                  <div style="display:flex; gap:0.5rem;">
+                    <button class="table-action-btn" type="submit" name="decisao" value="validar">Aprovar</button>
+                    <button class="table-action-btn danger-button" type="submit" name="decisao" value="rejeitar" onclick="return confirm('Rejeitar este pedido?')">Rejeitar</button>
+                  </div>
                 </form>
               <% } else { %>
                 <span>—</span>
@@ -75,7 +78,71 @@
 
   <!-- ═══ MATRÍCULAS ═══════════════════════════════════════════ -->
   <% if (section === 'matriculas') { %>
-    <h2>Matrículas</h2>
+    <% if (action === 'view' && alunoDetalhes) { %>
+      <!-- VER FICHA COMPLETA -->
+      <div style="margin-bottom: 2rem;">
+        <a href="/funcionario?section=matriculas" class="cancel-link" style="margin-bottom: 1rem; display: inline-block;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
+
+      <div class="ficha-box">
+        <div class="ficha-foto">
+          <img src="/funcionario/foto?id=<%= alunoDetalhes.IdAluno %>"
+               alt="<%= alunoDetalhes.Nome %>" 
+               onerror="this.style.display='none'" 
+               style="width: 140px; height: 160px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border);">
+        </div>
+        
+        <div class="ficha-dados">
+          <p><strong>ID Aluno:</strong> <%= alunoDetalhes.IdAluno %></p>
+          <p><strong>Nome:</strong> <%= alunoDetalhes.Nome %></p>
+          <p><strong>Curso:</strong> <%= alunoDetalhes.Curso %></p>
+          <p><strong>Data de Nascimento:</strong> <%= alunoDetalhes.DataNascimento %></p>
+          <p><strong>Email:</strong> <%= alunoDetalhes.Email || '-' %></p>
+          <p><strong>Telefone:</strong> <%= alunoDetalhes.Telefone || '-' %></p>
+          <p><strong>Morada:</strong> <%= alunoDetalhes.Morada || '-' %></p>
+          <p><strong>Estado da Validação:</strong> 
+            <span class="<%= estadoBadgeClass(alunoDetalhes.EstadoValidacao) %>">
+              <%= alunoDetalhes.EstadoValidacao || 'Pendente' %>
+            </span>
+          </p>
+          <% if (alunoDetalhes.DataValidacao) { %>
+            <p><strong>Validado Por:</strong> <%= alunoDetalhes.ValidadoPor || '-' %></p>
+            <p><strong>Data de Validação:</strong> <%= formatDatePt(alunoDetalhes.DataValidacao) %></p>
+          <% } %>
+          <% if (alunoDetalhes.ObservacoesValidacao) { %>
+            <p><strong>Observações:</strong> <%= alunoDetalhes.ObservacoesValidacao %></p>
+          <% } %>
+        </div>
+      </div>
+
+      <% if (alunoDetalhes.EstadoValidacao === 'Pendente') { %>
+        <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+          <form method="post" action="/funcionario" style="flex: 1;">
+            <input type="hidden" name="post_action" value="decidir_matricula">
+            <input type="hidden" name="IdAluno"     value="<%= alunoDetalhes.IdAluno %>">
+            <input type="hidden" name="decisao"     value="validar">
+            <button type="submit" style="width: 100%; background: var(--secondary); color: var(--background); padding: 1rem; border-radius: 6px; font-weight: 600; border: none; cursor: pointer;">
+              <i class="fas fa-check"></i> Aprovar Ficha
+            </button>
+          </form>
+          <form method="post" action="/funcionario" style="flex: 1;" onsubmit="return confirm('Tem certeza que quer rejeitar esta ficha?');">
+            <input type="hidden" name="post_action" value="decidir_matricula">
+            <input type="hidden" name="IdAluno"     value="<%= alunoDetalhes.IdAluno %>">
+            <input type="hidden" name="decisao"     value="rejeitar">
+            <button type="submit" style="width: 100%; background: var(--danger); color: var(--background); padding: 1rem; border-radius: 6px; font-weight: 600; border: none; cursor: pointer;">
+              <i class="fas fa-times"></i> Rejeitar Ficha
+            </button>
+          </form>
+        </div>
+      <% } %>
+    <% } else { %>
+      <!-- LISTA DE MATRÍCULAS -->
+      <h2><i class="fas fa-file-alt"></i> Matrículas Aceites</h2>
+    <p style="color: var(--foreground); opacity: 0.8; margin-bottom: 1.5rem;">
+      Aqui aparecem apenas as matrículas aprovadas dos alunos.
+    </p>
 
     <form method="get" action="/funcionario" class="filters-row">
       <input type="hidden" name="section" value="matriculas">
@@ -92,54 +159,262 @@
           <% }) %>
         </select>
       </div>
-      <div>
-        <label>Estado</label><br>
-        <select name="estado_mat">
-          <option value="">Todos</option>
-          <option value="Pendente">Pendente</option>
-          <option value="Aprovada">Aprovada</option>
-          <option value="Rejeitada">Rejeitada</option>
-        </select>
-      </div>
       <div><button type="submit">Filtrar</button></div>
     </form>
 
     <div class="table-scroll">
       <table>
-        <tr><th>ID</th><th>Nome</th><th>Curso</th><th>Email</th><th>Estado</th><th>Ações</th></tr>
+        <tr><th>ID</th><th>Nome</th><th>Curso</th><th>Email</th><th>Telefone</th><th>Estado</th><th>Ações</th></tr>
         <% matriculas.forEach(m => { %>
           <tr>
             <td><%= m.IdAluno %></td>
             <td><%= m.Nome %></td>
             <td><%= m.Curso %></td>
             <td><%= m.Email || '-' %></td>
-            <td><%= m.EstadoValidacao || 'Pendente' %></td>
+            <td><%= m.Telefone || '-' %></td>
+            <td>
+              <span class="<%= estadoBadgeClass(m.EstadoValidacao) %>">
+                <%= m.EstadoValidacao || 'Pendente' %>
+              </span>
+            </td>
             <td class="actions">
-              <% if (m.EstadoValidacao === 'Pendente') { %>
-                <form class="inline" method="post" action="/funcionario">
-                  <input type="hidden" name="post_action" value="decidir_matricula">
-                  <input type="hidden" name="IdAluno"     value="<%= m.IdAluno %>">
-                  <input type="hidden" name="decisao"     value="validar">
-                  <button class="table-action-btn" type="submit">Aprovar</button>
-                </form>
-                <form class="inline" method="post" action="/funcionario"
-                      onsubmit="return confirm('Rejeitar esta matrícula?')">
-                  <input type="hidden" name="post_action" value="decidir_matricula">
-                  <input type="hidden" name="IdAluno"     value="<%= m.IdAluno %>">
-                  <input type="hidden" name="decisao"     value="rejeitar">
-                  <button class="table-action-btn danger-button" type="submit">Rejeitar</button>
-                </form>
-              <% } else { %>
-                <span><%= m.EstadoValidacao %></span>
-              <% } %>
+              <a class="table-action-btn" href="/funcionario?section=matriculas&action=view&id=<%= m.IdAluno %>">
+                <i class="fas fa-eye"></i> Ver Ficha
+              </a>
             </td>
           </tr>
         <% }) %>
         <% if (!matriculas.length) { %>
-          <tr><td colspan="6">Sem matrículas para os filtros selecionados.</td></tr>
+          <tr><td colspan="7" style="text-align: center; padding: 2rem;">Sem matrículas aceites para os filtros selecionados.</td></tr>
         <% } %>
       </table>
     </div>
+    <% } %>
+  <% } %>
+
+  <!-- ═══ PEDIDOS DE FICHA DE ALUNOS ═════════════════════════════ -->
+  <% if (section === 'pedidos_fichas') { %>
+    <% if (action === 'view' && pedidoFichaDetalhes) { %>
+      <!-- VER PEDIDO DE FICHA COMPLETO -->
+      <div style="margin-bottom: 2rem;">
+        <a href="/funcionario?section=pedidos_fichas" class="cancel-link" style="margin-bottom: 1rem; display: inline-block;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
+
+      <div class="ficha-box">
+        <div class="ficha-foto">
+          <img src="/funcionario/foto?id=<%= pedidoFichaDetalhes.IdAluno %>"
+               alt="<%= pedidoFichaDetalhes.Nome %>" 
+               onerror="this.style.display='none'" 
+               style="width: 140px; height: 160px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border);">
+        </div>
+        
+        <div class="ficha-dados">
+          <p><strong>ID Aluno:</strong> <%= pedidoFichaDetalhes.IdAluno %></p>
+          <p><strong>Nome:</strong> <%= pedidoFichaDetalhes.Nome %></p>
+          <p><strong>Curso:</strong> <%= pedidoFichaDetalhes.Curso %></p>
+          <p><strong>Data de Nascimento:</strong> <%= pedidoFichaDetalhes.DataNascimento %></p>
+          <p><strong>Email:</strong> <%= pedidoFichaDetalhes.Email || '-' %></p>
+          <p><strong>Telefone:</strong> <%= pedidoFichaDetalhes.Telefone || '-' %></p>
+          <p><strong>Morada:</strong> <%= pedidoFichaDetalhes.Morada || '-' %></p>
+          <p><strong>Estado da Solicitação:</strong> 
+            <span style="padding: 0.3rem 0.6rem; border-radius: 4px; font-weight: 600;
+              background: var(--accent); color: var(--foreground);">
+              Pendente
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+        <form method="post" action="/funcionario" style="flex: 1; display:flex; flex-direction:column; gap:0.4rem;">
+          <input type="hidden" name="post_action" value="decidir_ficha">
+          <input type="hidden" name="origem" value="pedidos_fichas">
+          <input type="hidden" name="IdAluno"     value="<%= pedidoFichaDetalhes.IdAluno %>">
+          <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Observação</label>
+          <textarea name="observacao_decisao" maxlength="255" rows="3" placeholder="Observação opcional" style="width:100%; margin-bottom:0.75rem;"></textarea>
+          <div style="display:flex; gap:1rem;">
+            <button type="submit" name="decisao" value="validar" style="flex: 1; background: var(--secondary); color: var(--background); padding: 1rem; border-radius: 6px; font-weight: 600; border: none; cursor: pointer;">
+              <i class="fas fa-check"></i> Aceitar Ficha
+            </button>
+            <button type="submit" name="decisao" value="rejeitar" onclick="return confirm('Tem certeza que quer rejeitar esta solicitação?');" style="flex: 1; background: var(--danger); color: var(--background); padding: 1rem; border-radius: 6px; font-weight: 600; border: none; cursor: pointer;">
+              <i class="fas fa-times"></i> Rejeitar Ficha
+            </button>
+          </div>
+        </form>
+      </div>
+    <% } else { %>
+      <!-- LISTA DE PEDIDOS DE FICHA DE ALUNOS -->
+      <h2><i class="fas fa-file-import"></i> Pedidos de Ficha de Alunos</h2>
+      <p style="color: var(--foreground); opacity: 0.8; margin-bottom: 1.5rem;">
+        Verifique, aceite ou rejeite os pedidos de ficha de alunos.
+      </p>
+
+      <form method="get" action="/funcionario" class="filters-row">
+        <input type="hidden" name="section" value="pedidos_fichas">
+        <div>
+          <label>Pesquisar</label><br>
+          <input type="text" name="q" placeholder="ID ou nome">
+        </div>
+        <div>
+          <label>Curso</label><br>
+          <select name="filtro_curso">
+            <option value="0">Todos</option>
+            <% cursos.forEach(c => { %>
+              <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div><button type="submit">Filtrar</button></div>
+      </form>
+
+      <div class="table-scroll">
+        <table>
+          <tr><th>ID</th><th>Nome</th><th>Curso</th><th>Email</th><th>Telefone</th><th>Estado</th><th>Ações</th></tr>
+          <% pedidosFichas.forEach(p => { %>
+            <tr>
+              <td><%= p.IdAluno %></td>
+              <td><%= p.Nome %></td>
+              <td><%= p.Curso %></td>
+              <td><%= p.Email || '-' %></td>
+              <td><%= p.Telefone || '-' %></td>
+              <td>
+                <span style="padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; background: var(--accent); color: var(--foreground);">
+                  Pendente
+                </span>
+              </td>
+              <td class="actions">
+                <a class="table-action-btn" href="/funcionario?section=pedidos_fichas&action=view&id=<%= p.IdAluno %>">
+                  <i class="fas fa-eye"></i> Ver Pedido
+                </a>
+                <form class="inline" method="post" action="/funcionario" style="display:flex; flex-direction:column; gap:0.4rem;">
+                  <input type="hidden" name="post_action" value="decidir_ficha">
+                  <input type="hidden" name="origem" value="pedidos_fichas">
+                  <input type="hidden" name="IdAluno"     value="<%= p.IdAluno %>">
+                  <label style="font-size:0.85rem; font-weight:600;">Observação</label>
+                  <textarea name="observacao_decisao" maxlength="255" rows="2" placeholder="Observação opcional" style="width:100%;"></textarea>
+                  <div style="display:flex; gap:0.5rem;">
+                    <button class="table-action-btn" type="submit" name="decisao" value="validar"><i class="fas fa-check"></i> Aceitar</button>
+                    <button class="table-action-btn danger-button" type="submit" name="decisao" value="rejeitar" onclick="return confirm('Rejeitar este pedido de ficha?')"><i class="fas fa-times"></i> Rejeitar</button>
+                  </div>
+                </form>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (!pedidosFichas.length) { %>
+            <tr><td colspan="7" style="text-align: center; padding: 2rem;">Sem pedidos de ficha pendentes.</td></tr>
+          <% } %>
+        </table>
+      </div>
+    <% } %>
+  <% } %>
+
+  <!-- ═══ FICHAS DE ALUNO ═════════════════════════════════════ -->
+  <% if (section === 'fichasaluno') { %>
+    <% if (action === 'view' && fichaAlunoDetalhes) { %>
+      <!-- VER FICHA COMPLETA -->
+      <div style="margin-bottom: 2rem;">
+        <a href="/funcionario?section=fichasaluno" class="cancel-link" style="margin-bottom: 1rem; display: inline-block;">
+          <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+      </div>
+
+      <div class="ficha-box">
+        <div class="ficha-foto">
+          <img src="/funcionario/foto?id=<%= fichaAlunoDetalhes.IdAluno %>"
+               alt="<%= fichaAlunoDetalhes.Nome %>" 
+               onerror="this.style.display='none'" 
+               style="width: 140px; height: 160px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border);">
+        </div>
+        
+        <div class="ficha-dados">
+          <p><strong>ID Aluno:</strong> <%= fichaAlunoDetalhes.IdAluno %></p>
+          <p><strong>Nome:</strong> <%= fichaAlunoDetalhes.Nome %></p>
+          <p><strong>Curso:</strong> <%= fichaAlunoDetalhes.Curso %></p>
+          <p><strong>Data de Nascimento:</strong> <%= fichaAlunoDetalhes.DataNascimento %></p>
+          <p><strong>Email:</strong> <%= fichaAlunoDetalhes.Email || '-' %></p>
+          <p><strong>Telefone:</strong> <%= fichaAlunoDetalhes.Telefone || '-' %></p>
+          <p><strong>Morada:</strong> <%= fichaAlunoDetalhes.Morada || '-' %></p>
+          <p><strong>Estado da Validação:</strong> 
+            <span class="<%= estadoBadgeClass(fichaAlunoDetalhes.EstadoValidacao) %>">
+              <%= fichaAlunoDetalhes.EstadoValidacao || 'Pendente' %>
+            </span>
+          </p>
+          <% if (fichaAlunoDetalhes.DataValidacao) { %>
+            <p><strong>Validado Por:</strong> <%= fichaAlunoDetalhes.ValidadoPor || '-' %></p>
+            <p><strong>Data de Validação:</strong> <%= formatDatePt(fichaAlunoDetalhes.DataValidacao) %></p>
+          <% } %>
+          <% if (fichaAlunoDetalhes.ObservacoesValidacao) { %>
+            <p><strong>Observações:</strong> <%= fichaAlunoDetalhes.ObservacoesValidacao %></p>
+          <% } %>
+        </div>
+      </div>
+    <% } else { %>
+      <!-- LISTA DE FICHAS DE ALUNO -->
+      <h2><i class="fas fa-file-contract"></i> Fichas de Aluno</h2>
+      <p style="color: var(--foreground); opacity: 0.8; margin-bottom: 1.5rem;">
+        Verifique, aceite ou rejeite as fichas de aluno.
+      </p>
+
+      <form method="get" action="/funcionario" class="filters-row">
+        <input type="hidden" name="section" value="fichasaluno">
+        <div>
+          <label>Pesquisar</label><br>
+          <input type="text" name="q" placeholder="ID ou nome">
+        </div>
+        <div>
+          <label>Curso</label><br>
+          <select name="filtro_curso">
+            <option value="0">Todos</option>
+            <% cursos.forEach(c => { %>
+              <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div><button type="submit">Filtrar</button></div>
+      </form>
+
+      <div class="table-scroll">
+        <table>
+          <tr><th>ID</th><th>Nome</th><th>Curso</th><th>Email</th><th>Telefone</th><th>Estado</th><th>Ações</th></tr>
+          <% fichasAlunos.forEach(f => { %>
+            <tr>
+              <td><%= f.IdAluno %></td>
+              <td><%= f.Nome %></td>
+              <td><%= f.Curso %></td>
+              <td><%= f.Email || '-' %></td>
+              <td><%= f.Telefone || '-' %></td>
+              <td>
+                <span class="<%= estadoBadgeClass(f.EstadoValidacao) %>">
+                  <%= f.EstadoValidacao || 'Pendente' %>
+                </span>
+              </td>
+              <td class="actions">
+                <a class="table-action-btn" href="/funcionario?section=fichasaluno&action=view&id=<%= f.IdAluno %>">
+                  <i class="fas fa-eye"></i> Ver Ficha
+                </a>
+                <% if (f.EstadoValidacao === 'Pendente') { %>
+                  <form class="inline" method="post" action="/funcionario" style="display:flex; flex-direction:column; gap:0.4rem;">
+                    <input type="hidden" name="post_action" value="decidir_ficha">
+                    <input type="hidden" name="IdAluno"     value="<%= f.IdAluno %>">
+                    <label style="font-size:0.85rem; font-weight:600;">Observação</label>
+                    <textarea name="observacao_decisao" maxlength="255" rows="2" placeholder="Observação opcional" style="width:100%;"></textarea>
+                    <div style="display:flex; gap:0.5rem;">
+                      <button class="table-action-btn" type="submit" name="decisao" value="validar"><i class="fas fa-check"></i> Aceitar</button>
+                      <button class="table-action-btn danger-button" type="submit" name="decisao" value="rejeitar" onclick="return confirm('Rejeitar esta ficha?')"><i class="fas fa-times"></i> Rejeitar</button>
+                    </div>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (!fichasAlunos.length) { %>
+            <tr><td colspan="7" style="text-align: center; padding: 2rem;">Sem fichas para os filtros selecionados.</td></tr>
+          <% } %>
+        </table>
+      </div>
+    <% } %>
   <% } %>
 
   <!-- ═══ NOTAS ═════════════════════════════════════════════════ -->

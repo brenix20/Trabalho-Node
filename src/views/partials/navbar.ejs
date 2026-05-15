@@ -24,12 +24,14 @@
     <% } else if (perfil === 'aluno') { %>
       <li><a href="/aluno?table=matriculas&action=ficha"><i class="fas fa-id-card"></i> Minha Ficha</a></li>
       <li><a href="/aluno?table=matriculas&action=ficha_edit"><i class="fas fa-edit"></i> Atualizar Dados</a></li>
-      <li><a href="/aluno?table=pedidos"><i class="fas fa-file-alt"></i> Matrícula</a></li>
+      <li><a href="/aluno?table=pedidos"><i class="fas fa-file-alt"></i> Pedido de Matrícula</a></li>
       <li><a href="/aluno?table=matriculas&action=minhas_disciplinas"><i class="fas fa-book"></i> Disciplinas</a></li>
       <li><a href="/aluno?table=matriculas&action=minha_turma"><i class="fas fa-users"></i> Turma</a></li>
     <% } else if (perfil === 'funcionario' || perfil === 'funcionário') { %>
-      <li><a href="/funcionario?section=pedidos"><i class="fas fa-inbox"></i> Pedidos</a></li>
+      <li><a href="/funcionario?section=pedidos"><i class="fas fa-inbox"></i> Pedidos de Matrícula</a></li>
       <li><a href="/funcionario?section=matriculas"><i class="fas fa-check-square"></i> Matrículas</a></li>
+      <li><a href="/funcionario?section=pedidos_fichas"><i class="fas fa-file-import"></i> Pedidos de Ficha</a></li>
+      <li><a href="/funcionario?section=fichasaluno"><i class="fas fa-file-contract"></i> Fichas de Aluno</a></li>
       <li><a href="/funcionario?section=notas"><i class="fas fa-pencil-alt"></i> Notas</a></li>
       <li><a href="/funcionario?section=pautas"><i class="fas fa-file-excel"></i> Pautas</a></li>
     <% } %>

@@ -16,9 +16,21 @@ async function nextId(Model, field) {
   return (last?.[field] || 0) + 1;
 }
 
+// ── GET FOTO ───────────────────────────────────────────────────────────────
+router.get('/foto', async (req, res) => {
+  const idAluno = parseInt(req.query.id, 10);
+  if (!idAluno) return res.sendStatus(400);
+  
+  const row = await Matricula.findOne({ IdAluno: idAluno }).select('Foto').lean();
+  if (!row || !row.Foto) return res.sendStatus(404);
+  
+  res.set('Content-Type', 'image/jpeg');
+  return res.send(row.Foto);
+});
+
 // ── GET /funcionario ──────────────────────────────────────────────────────────
 router.get('/', async (req, res) => {
-  const section  = ['pedidos', 'notas', 'pautas', 'matriculas'].includes(req.query.section) ? req.query.section : 'pedidos';
+  const section  = ['pedidos', 'matriculas', 'pedidos_fichas', 'fichasaluno', 'notas', 'pautas'].includes(req.query.section) ? req.query.section : 'pedidos';
   const mensagem = req.query.message || '';
   const tipo     = req.query.type === 'success' ? 'success' : 'error';
   const action   = req.query.action || 'list';
@@ -48,23 +60,91 @@ router.get('/', async (req, res) => {
     }));
   }
 
-  // ── MATRÍCULAS ────────────────────────────────────────────────
+  // ── MATRÍCULAS (Apenas aceites) ────────────────────────────────
   let matriculas = [];
+  let alunoDetalhes = null;
   if (section === 'matriculas') {
-    const q  = String(req.query.q || '').trim();
-    const fc = parseInt(req.query.filtro_curso, 10) || 0;
+    if (action === 'view' && req.query.id) {
+      // Vista de ficha completa de um aluno
+      const idAluno = parseInt(req.query.id, 10);
+      alunoDetalhes = await Matricula.findOne({ IdAluno: idAluno, EstadoValidacao: 'Aprovada' }).lean();
+      if (alunoDetalhes) {
+        alunoDetalhes.Curso = courseMap.get(alunoDetalhes.IdCurso) || '';
+        alunoDetalhes.DataNascimento = alunoDetalhes.DataNascimento ? formatDatePt(String(alunoDetalhes.DataNascimento).slice(0, 10)) : '-';
+      }
+    } else {
+      // Lista de matrículas aceites
+      const q  = String(req.query.q || '').trim();
+      const fc = parseInt(req.query.filtro_curso, 10) || 0;
 
-    const filtro = {};
-    if (q) {
-      filtro.$or = [{ Nome: new RegExp(q, 'i') }];
-      const qNum = parseInt(q, 10);
-      if (!Number.isNaN(qNum)) filtro.$or.push({ IdAluno: qNum });
+      const filtro = { EstadoValidacao: 'Aprovada' };
+      if (q) {
+        filtro.$or = [{ Nome: new RegExp(q, 'i') }];
+        const qNum = parseInt(q, 10);
+        if (!Number.isNaN(qNum)) filtro.$or.push({ IdAluno: qNum });
+      }
+      if (fc) filtro.IdCurso = fc;
+      const rows = await Matricula.find(filtro).sort({ IdAluno: -1 }).lean();
+      matriculas = rows.map((m) => ({ ...m, Curso: courseMap.get(m.IdCurso) || '' }));
     }
-    if (fc) filtro.IdCurso = fc;
-    const estadoFiltro = req.query.estado_mat || '';
-    if (estadoFiltro) filtro.EstadoValidacao = estadoFiltro;
-    const rows = await Matricula.find(filtro).sort({ IdAluno: -1 }).lean();
-    matriculas = rows.map((m) => ({ ...m, Curso: courseMap.get(m.IdCurso) || '' }));
+  }
+
+  // ── PEDIDOS DE FICHA DE ALUNOS (Pendentes) ────────────────────
+  let pedidosFichas = [];
+  let pedidoFichaDetalhes = null;
+  if (section === 'pedidos_fichas') {
+    if (action === 'view' && req.query.id) {
+      // Vista de pedido de ficha completo
+      const idAluno = parseInt(req.query.id, 10);
+      pedidoFichaDetalhes = await Matricula.findOne({ IdAluno: idAluno, EstadoValidacao: 'Pendente' }).lean();
+      if (pedidoFichaDetalhes) {
+        pedidoFichaDetalhes.Curso = courseMap.get(pedidoFichaDetalhes.IdCurso) || '';
+        pedidoFichaDetalhes.DataNascimento = pedidoFichaDetalhes.DataNascimento ? formatDatePt(String(pedidoFichaDetalhes.DataNascimento).slice(0, 10)) : '-';
+      }
+    } else {
+      // Lista de pedidos de fichas pendentes
+      const q  = String(req.query.q || '').trim();
+      const fc = parseInt(req.query.filtro_curso, 10) || 0;
+
+      const filtro = { EstadoValidacao: 'Pendente' };
+      if (q) {
+        filtro.$or = [{ Nome: new RegExp(q, 'i') }];
+        const qNum = parseInt(q, 10);
+        if (!Number.isNaN(qNum)) filtro.$or.push({ IdAluno: qNum });
+      }
+      if (fc) filtro.IdCurso = fc;
+      const rows = await Matricula.find(filtro).sort({ IdAluno: -1 }).lean();
+      pedidosFichas = rows.map((m) => ({ ...m, Curso: courseMap.get(m.IdCurso) || '' }));
+    }
+  }
+
+  // ── FICHAS DE ALUNO (Apenas aceites) ────────────────────────────
+  let fichasAlunos = [];
+  let fichaAlunoDetalhes = null;
+  if (section === 'fichasaluno') {
+    if (action === 'view' && req.query.id) {
+      // Vista de ficha de aluno completa
+      const idAluno = parseInt(req.query.id, 10);
+      fichaAlunoDetalhes = await Matricula.findOne({ IdAluno: idAluno, EstadoValidacao: 'Aprovada' }).lean();
+      if (fichaAlunoDetalhes) {
+        fichaAlunoDetalhes.Curso = courseMap.get(fichaAlunoDetalhes.IdCurso) || '';
+        fichaAlunoDetalhes.DataNascimento = fichaAlunoDetalhes.DataNascimento ? formatDatePt(String(fichaAlunoDetalhes.DataNascimento).slice(0, 10)) : '-';
+      }
+    } else {
+      // Lista de fichas de aluno aceites
+      const q  = String(req.query.q || '').trim();
+      const fc = parseInt(req.query.filtro_curso, 10) || 0;
+
+      const filtro = { EstadoValidacao: 'Aprovada' };
+      if (q) {
+        filtro.$or = [{ Nome: new RegExp(q, 'i') }];
+        const qNum = parseInt(q, 10);
+        if (!Number.isNaN(qNum)) filtro.$or.push({ IdAluno: qNum });
+      }
+      if (fc) filtro.IdCurso = fc;
+      const rows = await Matricula.find(filtro).sort({ IdAluno: -1 }).lean();
+      fichasAlunos = rows.map((m) => ({ ...m, Curso: courseMap.get(m.IdCurso) || '' }));
+    }
   }
 
   // ── NOTAS ─────────────────────────────────────────────────────
@@ -139,8 +219,8 @@ router.get('/', async (req, res) => {
   res.render('funcionario/index', {
     section, mensagem, tipo, action,
     disciplinas, cursos,
-    pedidos, matriculas, rowsNotas, notaEdit,
-    rowsPauta, pautaDisciplinaId, pautaEpoca, pautaAnoLetivo,
+    pedidos, matriculas, alunoDetalhes, pedidosFichas, pedidoFichaDetalhes, fichasAlunos, fichaAlunoDetalhes,
+    rowsNotas, notaEdit, rowsPauta, pautaDisciplinaId, pautaEpoca, pautaAnoLetivo,
     alunosSelect,
     anoLetivoAtual: anoLetivoAtual(),
     formatDatePt, sessao: req.session,
@@ -196,6 +276,29 @@ router.post('/', async (req, res) => {
     return redirectMsg(res, 'matriculas', 'error', 'Não foi possível atualizar a matrícula (pode já estar decidida).');
   }
 
+  // ── Decidir ficha de aluno ────────────────────────────────────
+  if (postAction === 'decidir_ficha') {
+    const idAluno   = parseInt(req.body.IdAluno, 10);
+    const decisao   = String(req.body.decisao || '');
+    const origem    = String(req.body.origem || 'fichasaluno').trim();
+    const observacao = String(req.body.observacao_decisao || '').trim();
+
+    if (!idAluno || !['validar', 'rejeitar'].includes(decisao)) {
+      return redirectMsg(res, origem, 'error', 'Ficha inválida.');
+    }
+
+    const novoEstado = decisao === 'validar' ? 'Aprovada' : 'Rejeitada';
+    const result = await Matricula.updateOne(
+      { IdAluno: idAluno, EstadoValidacao: 'Pendente' },
+      { $set: { EstadoValidacao: novoEstado, ObservacoesValidacao: observacao || null, ValidadoPor: req.session.utilizador_nome, DataValidacao: new Date() } }
+    );
+
+    if (result.modifiedCount > 0) {
+      return redirectMsg(res, origem, 'success', novoEstado === 'Aprovada' ? 'Ficha aceite com sucesso.' : 'Ficha rejeitada com sucesso.');
+    }
+    return redirectMsg(res, origem, 'error', 'Não foi possível atualizar a ficha (pode já estar decidida).');
+  }
+
   // ── Guardar nota ──────────────────────────────────────────────
   if (postAction === 'guardar_nota') {
     const idNota       = parseInt(req.body.IdNota, 10) || 0;
@@ -245,6 +348,32 @@ router.post('/', async (req, res) => {
         );
         return redirectMsg(res, 'notas', 'success', 'Nota atualizada com sucesso.');
       } else {
+        // Se já existir uma nota para este (Aluno,Disciplina,Epoca,AnoLetivo), atualiza em vez de criar
+        // Normalize types before searching to avoid false matches
+        const query = {
+          IdAluno: Number(idAluno),
+          IdDisciplina: Number(idDisciplina),
+          Epoca: String(epoca).trim(),
+          AnoLetivo: String(anoLetivo).trim(),
+        };
+        console.log('[NOTAS] Procurando nota existente com query:', query);
+        const existing = await NotaAvaliacao.findOne(query).lean();
+        if (existing && existing.IdNota) {
+          console.log('[NOTAS] Nota existente encontrada:', existing.IdNota);
+          await NotaAvaliacao.updateOne(
+            { IdNota: existing.IdNota },
+            {
+              $set: {
+                Nota: nota,
+                Observacoes: observacoes || null,
+                AtualizadoPor: req.session.utilizador_nome,
+                AtualizadoEm: new Date(),
+              },
+            }
+          );
+          return redirectMsg(res, 'notas', 'success', 'Já existia uma nota para este aluno/disciplina/época/ano — nota atualizada.');
+        }
+
         await NotaAvaliacao.create({
           IdNota: await nextId(NotaAvaliacao, 'IdNota'),
           IdAluno: idAluno,

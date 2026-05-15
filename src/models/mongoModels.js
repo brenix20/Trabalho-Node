@@ -61,7 +61,7 @@ const notaAvaliacaoSchema = new Schema({
   IdDisciplina: { type: Number, required: true },
   Epoca: { type: String, default: 'Normal', maxlength: 20 },
   AnoLetivo: { type: String, required: true, maxlength: 9 },
-  Nota: { type: Number, required: true },
+  Nota: { type: Number, required: true, min: 0, max: 20 },
   Observacoes: { type: String, maxlength: 255, default: null },
   AtualizadoPor: { type: String, maxlength: 80, default: null },
   AtualizadoEm: { type: Date, default: Date.now },
@@ -73,7 +73,7 @@ notaAvaliacaoSchema.index({ IdAluno: 1 });
 
 notaAvaliacaoSchema.pre('save', function updateTimestamp(next) {
   this.AtualizadoEm = new Date();
-  next();
+  if (typeof next === 'function') return next();
 });
 
 const pedidoMatriculaSchema = new Schema({

@@ -33,8 +33,9 @@ async function getPerfisDocs() {
 
 function mapPerfisForView(perfisDocs) {
   return perfisDocs.map((p) => ({
-    IdPerfis: String(p._id),
+    IdPerfis: String(p.IdPerfis),
     perfil: p.perfil,
+    _id: p._id,
   }));
 }
 
@@ -134,9 +135,9 @@ router.post('/', async (req, res) => {
       return render({ mensagem: e.message, novoUtilizadorInput: novoUtilizador, perfilSelecionado });
     }
 
-    const perfilDoc = perfisDocs.find((p) => String(p._id) === perfilSelecionado);
+    const perfilDoc = perfisDocs.find((p) => String(p.IdPerfis) === perfilSelecionado);
     if (!perfilDoc) {
-      return render({ mensagem: 'Perfil inválido.', novoUtilizadorInput: novoUtilizador });
+      return render({ mensagem: 'Perfil inválido.', novoUtilizadorInput: novoUtilizador, perfilSelecionado });
     }
 
     const existe = await User.findOne({ login: novoUtilizador }).select('_id').lean();
