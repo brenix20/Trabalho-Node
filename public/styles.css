@@ -371,7 +371,7 @@ input[type="submit"]:active {
   background: var(--background);
   border: none;
   border-radius: var(--radius-lg);
-  padding: 2rem;
+  padding: 5px 25px;
   margin-bottom: 2rem;
   box-shadow: none;
 }
@@ -827,7 +827,7 @@ tbody tr:hover td {
 .filters-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.25rem;
+  gap: 1.5rem;
   align-items: flex-end;
   background: var(--muted);
   border: 2px solid var(--border);
@@ -853,11 +853,11 @@ tbody tr:hover td {
 
 .table-action-btn {
   padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  min-height: 2rem;
+  font-size: 0.95rem;
+  min-height: 3rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
 }
 
 .table-action-btn.edit {
@@ -875,7 +875,7 @@ tbody tr:hover td {
   color: var(--background);
   width: auto;
   border-radius: var(--radius-md);
-  padding: 0.5rem 0.85rem;
+  padding: 0.875rem 1.75rem;;
   min-height: 2.25rem;
 }
 

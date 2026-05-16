@@ -222,7 +222,7 @@
                     <input type="hidden" name="IdAluno" value="<%= m.IdAluno %>">
                     <label style="font-size:0.85rem; font-weight:600;">Observação</label>
                     <textarea name="ObservacoesValidacao" maxlength="255" rows="2" placeholder="Observação opcional"></textarea>
-                    <div style="display:flex; gap:0.5rem;">c
+                    <div style="display:flex; gap:0.5rem;">
                       <button class="table-action-btn" type="submit" name="EstadoValidacao" value="Aprovada">Aprovar</button>
                       <button class="table-action-btn danger-button" type="submit" name="EstadoValidacao" value="Rejeitada" onclick="return confirm('Rejeitar esta ficha?')">Rejeitar</button>
                     </div>
@@ -277,7 +277,7 @@
           <input type="text" name="Telefone" maxlength="9" inputmode="numeric" pattern="[0-9]{1,9}" required><br>
 
           <label>Foto</label><br>
-          <input type="file" name="Foto" accept=".jpg,.png" required><br>
+          <input type="file" name="Foto" accept=".jpg,.png" required><br><br>
 
           <button type="submit">Criar</button>
         </form>
