@@ -19,7 +19,8 @@
     <% if (perfil === 'gestor') { %>
       <li><a href="/gestor?table=disciplina"><i class="fas fa-book"></i> Disciplinas</a></li>
       <li><a href="/gestor?table=cursos"><i class="fas fa-graduation-cap"></i> Cursos</a></li>
-      <li><a href="/gestor?table=matriculas"><i class="fas fa-users"></i> Matrículas</a></li>
+      <li><a href="/gestor?table=matriculas_aceites"><i class="fas fa-users"></i> Matrículas Aceites</a></li>
+      <li><a href="/gestor?table=matriculas_pendentes"><i class="fas fa-user-clock"></i> Matrículas Pendentes</a></li>
       <li><a href="/gestor?table=plano_estudos"><i class="fas fa-list-check"></i> Plano de Estudos</a></li>
     <% } else if (perfil === 'aluno') { %>
       <li><a href="/aluno?table=matriculas&action=ficha"><i class="fas fa-id-card"></i> Minha Ficha</a></li>

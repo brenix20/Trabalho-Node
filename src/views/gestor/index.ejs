@@ -19,6 +19,8 @@
       if (estado === 'Rejeitada') return 'badge-estado badge-estado-rejeitada';
       return 'badge-estado badge-estado-pendente';
     } %>
+  <% const isMatriculasAceites = table === 'matriculas_aceites'; %>
+  <% const isMatriculasPendentes = table === 'matriculas_pendentes'; %>
 
   <% if (mensagem) { %>
     <div class="message <%= tipo %>"><%= mensagem %></div>
@@ -36,7 +38,7 @@
             <td><%= d.Disciplina %></td>
             <td><%= d.Sigla %></td>
             <td class="actions">
-              <a class="table-action-btn" href="/gestor?table=disciplina&action=edit&id=<%= d.IdDisciplina %>">Editar</a>
+              <a class="table-action-btn" href="/gestor?table=disciplina&action=edit&id=<%= d.IdDisciplina %>#editar-disciplina">Editar</a>
               <form class="inline" method="post" action="/gestor"
                     onsubmit="return confirm('Remover disciplina?')">
                 <input type="hidden" name="table"         value="disciplina">
@@ -53,7 +55,7 @@
       </table>
     </div>
 
-    <div class="form-box">
+    <div class="form-box" id="editar-disciplina">
       <h3><%= editData ? 'Editar Disciplina' : 'Nova Disciplina' %></h3>
       <form method="post" action="/gestor">
         <input type="hidden" name="table"  value="disciplina">
@@ -123,10 +125,10 @@
   <% } %>
 
   <!-- ═══ MATRÍCULAS ═══════════════════════════════════════════ -->
-  <% if (table === 'matriculas') { %>
+  <% if (isMatriculasAceites || isMatriculasPendentes) { %>
     <% if (action === 'ficha' && fichaDetalhes) { %>
       <h2>Ficha do Aluno</h2>
-      <p style="margin-bottom: 1.5rem;"><a class="cancel-link" href="/gestor?table=matriculas">Voltar</a></p>
+      <p style="margin-bottom: 1.5rem;"><a class="cancel-link" href="/gestor?table=<%= isMatriculasPendentes ? 'matriculas_pendentes' : 'matriculas_aceites' %>">Voltar</a></p>
 
       <div class="ficha-box">
         <div class="ficha-foto">
@@ -142,7 +144,7 @@
           <p><strong>Email:</strong> <%= fichaDetalhes.Email || '-' %></p>
           <p><strong>Telefone:</strong> <%= fichaDetalhes.Telefone || '-' %></p>
           <p><strong>Morada:</strong> <%= fichaDetalhes.Morada || '-' %></p>
-          <p><strong>Estado da Validação:</strong>
+          <p class="ficha-estado"><strong>Estado da Validação:</strong>
             <span class="<%= estadoBadgeClass(fichaDetalhes.EstadoValidacao) %>"><%= fichaDetalhes.EstadoValidacao || 'Pendente' %></span>
           </p>
           <% if (fichaDetalhes.ValidadoPor) { %>
@@ -169,119 +171,131 @@
         <p>Não existem disciplinas associadas a este curso.</p>
       <% } %>
     <% } else { %>
-      <h2>Matrículas</h2>
-
-      <h3>Matrículas Aceites</h3>
-      <div class="table-scroll">
-        <table>
-          <tr><th>ID</th><th>Nome</th><th>Curso</th><th>Nascimento</th><th>Email</th><th>Telefone</th><th>Estado</th><th>Ações</th></tr>
-          <% rowsMatriculasAceites.forEach(m => { %>
-            <tr>
-              <td><%= m.IdAluno %></td>
-              <td><%= m.Nome %></td>
-              <td><%= m.Curso %></td>
-              <td><%= formatDatePt(m.DataNascimento) %></td>
-              <td><%= m.Email || '-' %></td>
-              <td><%= m.Telefone || '-' %></td>
-              <td><span class="<%= estadoBadgeClass(m.EstadoValidacao) %>"><%= m.EstadoValidacao || 'Aprovada' %></span></td>
-              <td class="actions">
-                <a class="table-action-btn view" href="/gestor?table=matriculas&action=ficha&id_aluno=<%= m.IdAluno %>">Ver ficha</a>
-                <form class="inline" method="post" action="/gestor" onsubmit="return confirm('Remover matrícula?')">
-                  <input type="hidden" name="table"   value="matriculas">
-                  <input type="hidden" name="action"  value="delete">
-                  <input type="hidden" name="IdAluno" value="<%= m.IdAluno %>">
-                  <button class="table-action-btn danger-button" type="submit">Eliminar</button>
-                </form>
-              </td>
-            </tr>
-          <% }) %>
-          <% if (!rowsMatriculasAceites.length) { %>
-            <tr><td colspan="8">Sem matrículas aceites.</td></tr>
-          <% } %>
-        </table>
-      </div>
-
-      <h3>Matrículas Pendentes / Rejeitadas</h3>
-      <div class="table-scroll">
-        <table>
-          <tr><th>ID</th><th>Nome</th><th>Curso</th><th>Nascimento</th><th>Email</th><th>Telefone</th><th>Estado</th><th>Ações</th></tr>
-          <% rowsMatriculasPendentesRejeitadas.forEach(m => { %>
-            <tr>
-              <td><%= m.IdAluno %></td>
-              <td><%= m.Nome %></td>
-              <td><%= m.Curso %></td>
-              <td><%= formatDatePt(m.DataNascimento) %></td>
-              <td><%= m.Email || '-' %></td>
-              <td><%= m.Telefone || '-' %></td>
-              <td><span class="<%= estadoBadgeClass(m.EstadoValidacao) %>"><%= m.EstadoValidacao || 'Pendente' %></span></td>
-              <td class="actions">
-                <div style="display:flex; flex-direction:column; gap:0.75rem;">
-                  <form method="post" action="/gestor" style="display:flex; flex-direction:column; gap:0.4rem;">
-                    <input type="hidden" name="table" value="matriculas">
-                    <input type="hidden" name="action" value="set_validation">
-                    <input type="hidden" name="IdAluno" value="<%= m.IdAluno %>">
-                    <label style="font-size:0.85rem; font-weight:600;">Observação</label>
-                    <textarea name="ObservacoesValidacao" maxlength="255" rows="2" placeholder="Observação opcional"></textarea>
-                    <div style="display:flex; gap:0.5rem;">c
-                      <button class="table-action-btn" type="submit" name="EstadoValidacao" value="Aprovada">Aprovar</button>
-                      <button class="table-action-btn danger-button" type="submit" name="EstadoValidacao" value="Rejeitada" onclick="return confirm('Rejeitar esta ficha?')">Rejeitar</button>
-                    </div>
-                  </form>
-                  <a class="table-action-btn view" href="/gestor?table=matriculas&action=ficha&id_aluno=<%= m.IdAluno %>">Ver ficha</a>
-                  <form class="inline" method="post" action="/gestor" onsubmit="return confirm('Remover matrícula?')">
-                    <input type="hidden" name="table"   value="matriculas">
-                    <input type="hidden" name="action"  value="delete">
-                    <input type="hidden" name="IdAluno" value="<%= m.IdAluno %>">
-                    <button class="table-action-btn danger-button" type="submit">Eliminar</button>
-                  </form>
-                </div>
-              </td>
-            </tr>
-          <% }) %>
-          <% if (!rowsMatriculasPendentesRejeitadas.length) { %>
-            <tr><td colspan="8">Sem matrículas pendentes/rejeitadas.</td></tr>
-          <% } %>
-        </table>
-      </div>
-
-      <div class="form-box">
-        <h3>Nova Matrícula</h3>
-        <form method="post" action="/gestor" enctype="multipart/form-data">
-          <input type="hidden" name="table"  value="matriculas">
-          <input type="hidden" name="action" value="create">
-
-          <label>ID Aluno</label><br>
-          <input type="number" name="IdAluno" min="1" required><br>
-
-          <label>Nome</label><br>
-          <input type="text" name="Nome" maxlength="25" required><br>
-
-          <label>Curso</label><br>
-          <select name="IdCurso" required>
-            <option value="">Selecione</option>
-            <% cursos.forEach(c => { %>
-              <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
+      <% if (isMatriculasAceites) { %>
+        <h2>Matrículas Aceites</h2>
+        <div class="table-scroll">
+          <table>
+            <tr><th>ID</th><th>Nome</th><th>Curso</th><th>Nascimento</th><th>Email</th><th>Telefone</th><th>Estado</th><th>Ações</th></tr>
+            <% rowsMatriculasAceites.forEach(m => { %>
+              <tr>
+                <td><%= m.IdAluno %></td>
+                <td><%= m.Nome %></td>
+                <td><%= m.Curso %></td>
+                <td><%= formatDatePt(m.DataNascimento) %></td>
+                <td><%= m.Email || '-' %></td>
+                <td><%= m.Telefone || '-' %></td>
+                <td><span class="<%= estadoBadgeClass(m.EstadoValidacao) %>"><%= m.EstadoValidacao || 'Aprovada' %></span></td>
+              </tr>
+              <tr>
+                <td colspan="8" class="actions" style="justify-content:flex-start; padding-top:0; border-top:0;">
+                  <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0.5rem; width:100%;">
+                    <a class="table-action-btn view" href="/gestor?table=matriculas_aceites&action=ficha&id_aluno=<%= m.IdAluno %>">Ver ficha</a>
+                    <form class="inline" method="post" action="/gestor" onsubmit="return confirm('Remover matrícula?')">
+                      <input type="hidden" name="table"   value="matriculas_aceites">
+                      <input type="hidden" name="action"  value="delete">
+                      <input type="hidden" name="IdAluno" value="<%= m.IdAluno %>">
+                      <button class="table-action-btn danger-button" type="submit">Eliminar</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
             <% }) %>
-          </select><br>
+            <% if (!rowsMatriculasAceites.length) { %>
+              <tr><td colspan="8">Sem matrículas aceites.</td></tr>
+            <% } %>
+          </table>
+        </div>
 
-          <label>Data de nascimento</label><br>
-          <input type="date" name="DataNascimento" required max="<%= dataMaximaNascimento %>"><br>
+        <div class="form-box">
+          <h3>Nova Matrícula</h3>
+          <form method="post" action="/gestor" enctype="multipart/form-data">
+            <input type="hidden" name="table"  value="matriculas_aceites">
+            <input type="hidden" name="action" value="create">
 
-          <label>Morada</label><br>
-          <input type="text" name="Morada" maxlength="255" required><br>
+            <label>ID Aluno</label><br>
+            <input type="number" name="IdAluno" min="1" required><br>
 
-          <label>Email</label><br>
-          <input type="email" name="Email" maxlength="120" required><br>
+            <label>Nome</label><br>
+            <input type="text" name="Nome" maxlength="25" required><br>
 
-          <label>Contacto telefónico</label><br>
-          <input type="text" name="Telefone" maxlength="9" inputmode="numeric" pattern="[0-9]{1,9}" required><br>
+            <label>Curso</label><br>
+            <select name="IdCurso" required>
+              <option value="">Selecione</option>
+              <% cursos.forEach(c => { %>
+                <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
+              <% }) %>
+            </select><br>
 
-          <label>Foto</label><br>
-          <input type="file" name="Foto" accept=".jpg,.png" required><br>
+            <label>Data de nascimento</label><br>
+            <input type="date" name="DataNascimento" required max="<%= dataMaximaNascimento %>"><br>
 
-          <button type="submit">Criar</button>
-        </form>
-      </div>
+            <label>Morada</label><br>
+            <input type="text" name="Morada" maxlength="255" required><br>
+
+            <label>Email</label><br>
+            <input type="email" name="Email" maxlength="120" required><br>
+
+            <label>Contacto telefónico</label><br>
+            <input type="text" name="Telefone" maxlength="9" inputmode="numeric" pattern="[0-9]{1,9}" required><br>
+
+            <label>Foto</label><br>
+            <input type="file" name="Foto" accept=".jpg,.png" required><br><br>
+
+            <button type="submit">Criar</button>
+          </form>
+        </div>
+
+      <% } %>
+
+      <% if (isMatriculasPendentes) { %>
+        <h2>Matrículas Pendentes / Rejeitadas</h2>
+        <div class="table-scroll">
+          <table>
+            <tr><th>ID</th><th>Nome</th><th>Curso</th><th>Nascimento</th><th>Email</th><th>Telefone</th><th>Estado</th><th>Ações</th></tr>
+            <% rowsMatriculasPendentesRejeitadas.forEach(m => { %>
+              <tr>
+                <td><%= m.IdAluno %></td>
+                <td><%= m.Nome %></td>
+                <td><%= m.Curso %></td>
+                <td><%= formatDatePt(m.DataNascimento) %></td>
+                <td><%= m.Email || '-' %></td>
+                <td><%= m.Telefone || '-' %></td>
+                <td><span class="<%= estadoBadgeClass(m.EstadoValidacao) %>"><%= m.EstadoValidacao || 'Pendente' %></span></td>
+              </tr>
+              <tr>
+                <td colspan="8" class="actions" style="justify-content:flex-start; padding-top:0; border-top:0;">
+                  <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0.75rem; width:100%;">
+                    <form method="post" action="/gestor" style="display:flex; flex-direction:column; gap:0.4rem; width:auto; min-width:260px;">
+                      <input type="hidden" name="table" value="matriculas_pendentes">
+                      <input type="hidden" name="action" value="set_validation">
+                      <input type="hidden" name="IdAluno" value="<%= m.IdAluno %>">
+                      <label style="font-size:0.85rem; font-weight:600;">Observação</label>
+                      <textarea name="ObservacoesValidacao" maxlength="255" rows="2" placeholder="Observação opcional"></textarea>
+                      <div style="display:flex; flex-direction:row; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                        <button class="table-action-btn" type="submit" name="EstadoValidacao" value="Aprovada">Aprovar</button>
+                        <button class="table-action-btn danger-button" type="submit" name="EstadoValidacao" value="Rejeitada" onclick="return confirm('Rejeitar esta ficha?')">Rejeitar</button>
+                      </div>
+                    </form>
+                    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:0.5rem;">
+                      <a class="table-action-btn view" href="/gestor?table=matriculas_pendentes&action=ficha&id_aluno=<%= m.IdAluno %>">Ver ficha</a>
+                      <form class="inline" method="post" action="/gestor" onsubmit="return confirm('Remover matrícula?')">
+                        <input type="hidden" name="table"   value="matriculas_pendentes">
+                        <input type="hidden" name="action"  value="delete">
+                        <input type="hidden" name="IdAluno" value="<%= m.IdAluno %>">
+                        <button class="table-action-btn danger-button" type="submit">Eliminar</button>
+                      </form>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+            <% if (!rowsMatriculasPendentesRejeitadas.length) { %>
+              <tr><td colspan="8">Sem matrículas pendentes/rejeitadas.</td></tr>
+            <% } %>
+          </table>
+        </div>
+
+      <% } %>
     <% } %>
   <% } %>
 

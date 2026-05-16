@@ -36,14 +36,17 @@ async function getLookups() {
 
 // ── GET /gestor ───────────────────────────────────────────────────────────────
 router.get('/', async (req, res) => {
-  const table   = ['disciplina', 'cursos', 'matriculas', 'plano_estudos'].includes(req.query.table) ? req.query.table : 'disciplina';
+  const requestedTable = String(req.query.table || '');
+  const table   = ['disciplina', 'cursos', 'matriculas_aceites', 'matriculas_pendentes', 'matriculas', 'plano_estudos'].includes(requestedTable)
+    ? (requestedTable === 'matriculas' ? 'matriculas_aceites' : requestedTable)
+    : 'disciplina';
   const action  = req.query.action || 'list';
   const mensagem = req.query.message || '';
   const tipo     = req.query.type === 'success' ? 'success' : 'error';
   const { disciplinas, cursos } = await getLookups();
 
   // ── FOTO ──────────────────────────────────────────────────────
-  if (table === 'matriculas' && action === 'foto') {
+  if ((table === 'matriculas_aceites' || table === 'matriculas_pendentes') && action === 'foto') {
     const id = parseInt(req.query.id_aluno, 10);
     const row = await Matricula.findOne({ IdAluno: id }).select('Foto').lean();
     if (!row || !row.Foto) return res.sendStatus(404);
@@ -66,7 +69,7 @@ router.get('/', async (req, res) => {
     editData = await Curso.findOne({ IdCurso: parseInt(req.query.id, 10) }).lean();
   }
 
-  if (table === 'matriculas') {
+  if (table === 'matriculas_aceites' || table === 'matriculas_pendentes') {
     const q = String(req.query.q || '').trim();
     const fc = parseInt(req.query.filtro_curso, 10) || 0;
     const filtro = {};
@@ -79,9 +82,18 @@ router.get('/', async (req, res) => {
 
     const raw = await Matricula.find(filtro).sort({ IdAluno: -1 }).lean();
     const courseMap = new Map((await Curso.find().select('IdCurso Curso').lean()).map((c) => [c.IdCurso, c.Curso]));
+    const planoRows = await PlanoEstudo.find().select('IdCurso IdDisciplina').lean();
+    const disciplinasByCurso = new Map();
+    const disciplinaMap = new Map((await Disciplina.find().select('IdDisciplina Disciplina').lean()).map((d) => [d.IdDisciplina, d.Disciplina]));
+    for (const row of planoRows) {
+      if (!disciplinasByCurso.has(row.IdCurso)) disciplinasByCurso.set(row.IdCurso, []);
+      const nomeDisciplina = disciplinaMap.get(row.IdDisciplina);
+      if (nomeDisciplina) disciplinasByCurso.get(row.IdCurso).push(nomeDisciplina);
+    }
     const mappedRows = raw.map((r) => ({
       ...r,
       Curso: courseMap.get(r.IdCurso) || '',
+      DisciplinasCurso: disciplinasByCurso.get(r.IdCurso) || [],
       DataNascimento: toDateInput(r.DataNascimento),
     }));
     rowsMatriculasAceites = mappedRows.filter((r) => r.EstadoValidacao === 'Aprovada');
@@ -89,9 +101,13 @@ router.get('/', async (req, res) => {
 
     if (action === 'ficha') {
       const idAluno = parseInt(req.query.id_aluno, 10);
-      const row = await Matricula.findOne({ IdAluno: idAluno }).lean();
+      const row = await Matricula.findOne(
+        table === 'matriculas_aceites'
+          ? { IdAluno: idAluno, EstadoValidacao: 'Aprovada' }
+          : { IdAluno: idAluno, EstadoValidacao: { $ne: 'Aprovada' } }
+      ).lean();
       if (!row) {
-        return redirectMsg(res, 'matriculas', 'error', 'Matrícula não encontrada.');
+        return redirectMsg(res, table, 'error', 'Matrícula não encontrada.');
       }
 
       const curso = await Curso.findOne({ IdCurso: row.IdCurso }).select('Curso').lean();
@@ -145,9 +161,11 @@ router.get('/', async (req, res) => {
 router.post('/', upload.single('Foto'), async (req, res) => {
   const postTable  = String(req.body.table || '');
   const postAction = String(req.body.action || '');
-  const allowed    = ['disciplina', 'cursos', 'matriculas', 'plano_estudos'];
+  const allowed    = ['disciplina', 'cursos', 'matriculas_aceites', 'matriculas_pendentes', 'matriculas', 'plano_estudos'];
 
   if (!allowed.includes(postTable)) return redirectMsg(res, 'disciplina', 'error', 'Tabela inválida.');
+
+  const matriculasPage = postTable === 'matriculas_pendentes' ? 'matriculas_pendentes' : 'matriculas_aceites';
 
   // ── DISCIPLINA ────────────────────────────────────────────────
   if (postTable === 'disciplina') {
@@ -222,12 +240,12 @@ router.post('/', upload.single('Foto'), async (req, res) => {
   }
 
   // ── MATRÍCULAS (gestor: validar/rejeitar/remover) ─────────────
-  if (postTable === 'matriculas') {
+  if (postTable === 'matriculas' || postTable === 'matriculas_aceites' || postTable === 'matriculas_pendentes') {
     if (postAction === 'set_validation') {
       const idAluno = parseInt(req.body.IdAluno, 10);
       const estado  = normalizarEstadoValidacao(req.body.EstadoValidacao || '');
       const obs     = String(req.body.ObservacoesValidacao || '').trim();
-      if (!estado) return redirectMsg(res, 'matriculas', 'error', 'Estado inválido.');
+      if (!estado) return redirectMsg(res, matriculasPage, 'error', 'Estado inválido.');
 
       await Matricula.updateOne({ IdAluno: idAluno }, {
         $set: {
@@ -237,7 +255,7 @@ router.post('/', upload.single('Foto'), async (req, res) => {
           DataValidacao: new Date(),
         },
       });
-      return redirectMsg(res, 'matriculas', 'success', 'Estado de validação atualizado.');
+      return redirectMsg(res, matriculasPage, 'success', 'Estado de validação atualizado.');
     }
 
     if (postAction === 'delete') {
@@ -245,7 +263,7 @@ router.post('/', upload.single('Foto'), async (req, res) => {
       await Matricula.deleteOne({ IdAluno: idAluno });
       await NotaAvaliacao.deleteMany({ IdAluno: idAluno });
       await PedidoMatricula.updateMany({ IdAluno: idAluno }, { $set: { IdAluno: null } });
-      return redirectMsg(res, 'matriculas', 'success', 'Matrícula removida com sucesso.');
+      return redirectMsg(res, matriculasPage, 'success', 'Matrícula removida com sucesso.');
     }
 
     if (postAction === 'create') {
@@ -277,9 +295,9 @@ router.post('/', upload.single('Foto'), async (req, res) => {
           Telefone: telefone,
           Foto: foto,
         });
-        return redirectMsg(res, 'matriculas', 'success', 'Matrícula criada com sucesso.');
+        return redirectMsg(res, matriculasPage, 'success', 'Matrícula criada com sucesso.');
       } catch (e) {
-        return redirectMsg(res, 'matriculas', 'error', e.message);
+        return redirectMsg(res, matriculasPage, 'error', e.message);
       }
     }
   }

@@ -1183,11 +1183,13 @@ tbody tr:hover td {
 
 .badge-estado {
   display: inline-block;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
   font-weight: 600;
   white-space: nowrap;
+  line-height: 1;
+  vertical-align: middle;
 }
 
 .badge-estado-pendente {
@@ -1203,6 +1205,45 @@ tbody tr:hover td {
 .badge-estado-rejeitada {
   background-color: var(--danger);
   color: var(--background);
+}
+
+.ficha-dados .badge-estado {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.18rem 0.45rem;
+  font-size: 0.72rem;
+  line-height: 1;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.ficha-dados .badge-estado-aprovada,
+.ficha-dados .badge-estado-pendente {
+  padding: 0.18rem 0.45rem;
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.ficha-dados .badge-estado-aprovada {
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+}
+
+.ficha-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  width: fit-content;
+  margin: 0;
+}
+
+.ficha-estado strong {
+  min-width: 0;
+}
+
+.ficha-estado .badge-estado {
+  flex: 0 0 auto;
 }
 
 .btn-small {
