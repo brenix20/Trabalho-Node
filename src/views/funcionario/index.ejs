@@ -27,17 +27,17 @@
     <h2>Pedidos de Matrícula</h2>
 
     <!-- Filtro de estado -->
-    <form method="get" action="/funcionario" class="filters-row">
+     <form method="get" action="/funcionario" class="filter-grid">
       <input type="hidden" name="section" value="pedidos">
-      <div>
-        <label>Estado</label><br>
-        <select name="estado_pedido">
+         <div class="filter-field">
+           <label class="filter-label">Estado</label>
+           <select name="estado_pedido" class="filter-select">
           <% ['Pendente','Aprovado','Rejeitado'].forEach(e => { %>
             <option value="<%= e %>"><%= e %></option>
           <% }) %>
         </select>
       </div>
-      <div><button type="submit">Filtrar</button></div>
+         <div class="filter-field"><button type="submit" class="filter-button">Filtrar</button></div>
     </form>
 
     <div class="table-scroll">
@@ -56,8 +56,6 @@
                 <form class="inline" method="post" action="/funcionario" style="display:flex; flex-direction:column; gap:0.4rem;">
                   <input type="hidden" name="post_action" value="decidir_pedido">
                   <input type="hidden" name="IdPedido"    value="<%= p.IdPedido %>">
-                  <label style="font-size:0.85rem; font-weight:600;">Observação</label>
-                  <textarea name="observacao_decisao" maxlength="255" rows="2" placeholder="Observação opcional" style="width:100%;"></textarea>
                   <div style="display:flex; gap:0.5rem;">
                     <button class="table-action-btn" type="submit" name="decisao" value="validar">Aprovar</button>
                     <button class="table-action-btn danger-button" type="submit" name="decisao" value="rejeitar" onclick="return confirm('Rejeitar este pedido?')">Rejeitar</button>
@@ -144,22 +142,22 @@
       Aqui aparecem apenas as matrículas aprovadas dos alunos.
     </p>
 
-    <form method="get" action="/funcionario" class="filters-row">
+    <form method="get" action="/funcionario" class="filter-grid">
       <input type="hidden" name="section" value="matriculas">
-      <div>
-        <label>Pesquisar</label><br>
-        <input type="text" name="q" placeholder="ID ou nome">
+      <div class="filter-field">
+        <label class="filter-label">Pesquisar</label>
+        <input type="text" name="q" placeholder="ID ou nome" class="filter-input">
       </div>
-      <div>
-        <label>Curso</label><br>
-        <select name="filtro_curso">
+      <div class="filter-field">
+        <label class="filter-label">Curso</label>
+        <select name="filtro_curso" class="filter-select">
           <option value="0">Todos</option>
           <% cursos.forEach(c => { %>
             <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
           <% }) %>
         </select>
       </div>
-      <div><button type="submit">Filtrar</button></div>
+      <div class="filter-field"><button type="submit" class="filter-button">Filtrar</button></div>
     </form>
 
     <div class="table-scroll">
@@ -219,8 +217,7 @@
           <p><strong>Telefone:</strong> <%= pedidoFichaDetalhes.Telefone || '-' %></p>
           <p><strong>Morada:</strong> <%= pedidoFichaDetalhes.Morada || '-' %></p>
           <p><strong>Estado da Solicitação:</strong> 
-            <span style="padding: 0.3rem 0.6rem; border-radius: 4px; font-weight: 600;
-              background: var(--accent); color: var(--foreground);">
+            <span class="badge-estado badge-estado-pendente">
               Pendente
             </span>
           </p>
@@ -232,8 +229,6 @@
           <input type="hidden" name="post_action" value="decidir_ficha">
           <input type="hidden" name="origem" value="pedidos_fichas">
           <input type="hidden" name="IdAluno"     value="<%= pedidoFichaDetalhes.IdAluno %>">
-          <label style="display:block; margin-bottom:0.5rem; font-weight:600;">Observação</label>
-          <textarea name="observacao_decisao" maxlength="255" rows="3" placeholder="Observação opcional" style="width:100%; margin-bottom:0.75rem;"></textarea>
           <div style="display:flex; gap:1rem;">
             <button type="submit" name="decisao" value="validar" style="flex: 1; background: var(--secondary); color: var(--background); padding: 1rem; border-radius: 6px; font-weight: 600; border: none; cursor: pointer;">
               <i class="fas fa-check"></i> Aceitar Ficha
@@ -251,22 +246,22 @@
         Verifique, aceite ou rejeite os pedidos de ficha de alunos.
       </p>
 
-      <form method="get" action="/funcionario" class="filters-row">
+      <form method="get" action="/funcionario" class="filter-grid">
         <input type="hidden" name="section" value="pedidos_fichas">
-        <div>
-          <label>Pesquisar</label><br>
-          <input type="text" name="q" placeholder="ID ou nome">
+        <div class="filter-field">
+          <label class="filter-label">Pesquisar</label>
+          <input type="text" name="q" placeholder="ID ou nome" class="filter-input">
         </div>
-        <div>
-          <label>Curso</label><br>
-          <select name="filtro_curso">
+        <div class="filter-field">
+          <label class="filter-label">Curso</label>
+          <select name="filtro_curso" class="filter-select">
             <option value="0">Todos</option>
             <% cursos.forEach(c => { %>
               <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
             <% }) %>
           </select>
         </div>
-        <div><button type="submit">Filtrar</button></div>
+        <div class="filter-field"><button type="submit" class="filter-button">Filtrar</button></div>
       </form>
 
       <div class="table-scroll">
@@ -292,8 +287,6 @@
                   <input type="hidden" name="post_action" value="decidir_ficha">
                   <input type="hidden" name="origem" value="pedidos_fichas">
                   <input type="hidden" name="IdAluno"     value="<%= p.IdAluno %>">
-                  <label style="font-size:0.85rem; font-weight:600;">Observação</label>
-                  <textarea name="observacao_decisao" maxlength="255" rows="2" placeholder="Observação opcional" style="width:100%;"></textarea>
                   <div style="display:flex; gap:0.5rem;">
                     <button class="table-action-btn" type="submit" name="decisao" value="validar"><i class="fas fa-check"></i> Aceitar</button>
                     <button class="table-action-btn danger-button" type="submit" name="decisao" value="rejeitar" onclick="return confirm('Rejeitar este pedido de ficha?')"><i class="fas fa-times"></i> Rejeitar</button>
@@ -357,22 +350,22 @@
         Verifique, aceite ou rejeite as fichas de aluno.
       </p>
 
-      <form method="get" action="/funcionario" class="filters-row">
+       <form method="get" action="/funcionario" class="filter-grid">
         <input type="hidden" name="section" value="fichasaluno">
-        <div>
-          <label>Pesquisar</label><br>
-          <input type="text" name="q" placeholder="ID ou nome">
+         <div class="filter-field">
+           <label class="filter-label">Pesquisar</label>
+           <input type="text" name="q" placeholder="ID ou nome" class="filter-input">
         </div>
-        <div>
-          <label>Curso</label><br>
-          <select name="filtro_curso">
+         <div class="filter-field">
+           <label class="filter-label">Curso</label>
+           <select name="filtro_curso" class="filter-select">
             <option value="0">Todos</option>
             <% cursos.forEach(c => { %>
               <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
             <% }) %>
           </select>
         </div>
-        <div><button type="submit">Filtrar</button></div>
+         <div class="filter-field"><button type="submit" class="filter-button">Filtrar</button></div>
       </form>
 
       <div class="table-scroll">
@@ -398,8 +391,6 @@
                   <form class="inline" method="post" action="/funcionario" style="display:flex; flex-direction:column; gap:0.4rem;">
                     <input type="hidden" name="post_action" value="decidir_ficha">
                     <input type="hidden" name="IdAluno"     value="<%= f.IdAluno %>">
-                    <label style="font-size:0.85rem; font-weight:600;">Observação</label>
-                    <textarea name="observacao_decisao" maxlength="255" rows="2" placeholder="Observação opcional" style="width:100%;"></textarea>
                     <div style="display:flex; gap:0.5rem;">
                       <button class="table-action-btn" type="submit" name="decisao" value="validar"><i class="fas fa-check"></i> Aceitar</button>
                       <button class="table-action-btn danger-button" type="submit" name="decisao" value="rejeitar" onclick="return confirm('Rejeitar esta ficha?')"><i class="fas fa-times"></i> Rejeitar</button>
@@ -483,24 +474,22 @@
     </div>
 
     <!-- Filtros de notas -->
-    <form method="get" action="/funcionario" class="filters-row">
+     <form method="get" action="/funcionario" class="filter-grid">
       <input type="hidden" name="section" value="notas">
-      <div>
-        <label>Disciplina</label><br>
-        <select name="f_disciplina">
+         <div class="filter-field">
+           <label class="filter-label">Disciplina</label>
+           <select name="f_disciplina" class="filter-select">
           <option value="0">Todas</option>
           <% disciplinas.forEach(d => { %>
             <option value="<%= d.IdDisciplina %>"><%= d.Disciplina %></option>
           <% }) %>
         </select>
       </div>
-      <div>
-        <label>Pesquisar</label><br>
-        <input type="text" name="q_nota" placeholder="Aluno, ID ou disciplina">
+         <div class="filter-field">
+           <label class="filter-label">Pesquisar</label>
+           <input type="text" name="q_nota" placeholder="Aluno, ID ou disciplina" class="filter-input">
       </div>
-      <div><button type="submit">Aplicar</button>
-        <a class="cancel-link" href="/funcionario?section=notas">Limpar</a>
-      </div>
+         <div class="filter-field"><button type="submit" class="filter-button">Aplicar</button></div>
     </form>
 
     <div class="notas-scroll">
@@ -544,11 +533,11 @@
 
     <div class="form-box">
       <h3>Filtros da pauta</h3>
-      <form method="get" action="/funcionario" class="filters-row">
+      <form method="get" action="/funcionario" class="filter-grid">
         <input type="hidden" name="section" value="pautas">
-        <div>
-          <label>Disciplina</label><br>
-          <select name="disciplina_id" required>
+        <div class="filter-field">
+          <label class="filter-label">Disciplina</label>
+          <select name="disciplina_id" class="filter-select" required>
             <option value="0">Selecionar disciplina</option>
             <% disciplinas.forEach(d => { %>
               <option value="<%= d.IdDisciplina %>"
@@ -558,20 +547,20 @@
             <% }) %>
           </select>
         </div>
-        <div>
-          <label>Época</label><br>
-          <select name="epoca">
+        <div class="filter-field">
+          <label class="filter-label">Época</label>
+          <select name="epoca" class="filter-select">
             <% ['Normal','Recurso','Especial'].forEach(e => { %>
               <option value="<%= e %>" <%= pautaEpoca === e ? 'selected' : '' %>><%= e %></option>
             <% }) %>
           </select>
         </div>
-        <div>
-          <label>Ano letivo</label><br>
-          <input type="text" name="ano_letivo" pattern="\d{4}/\d{4}"
+        <div class="filter-field">
+          <label class="filter-label">Ano letivo</label>
+          <input type="text" name="ano_letivo" class="filter-input" pattern="\d{4}/\d{4}"
                  value="<%= pautaAnoLetivo %>" required>
         </div>
-        <div><button type="submit">Gerar pauta</button></div>
+        <div class="filter-field"><button type="submit" class="filter-button">Gerar pauta</button></div>
       </form>
     </div>
 

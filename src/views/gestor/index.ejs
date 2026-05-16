@@ -154,6 +154,21 @@
           <% if (fichaDetalhes.ObservacoesValidacao) { %>
             <p><strong>Observação:</strong> <%= fichaDetalhes.ObservacoesValidacao %></p>
           <% } %>
+          <% if (fichaDetalhes.EstadoValidacao === 'Pendente') { %>
+            <div style="margin-top: 1rem;">
+              <form method="post" action="/gestor" style="display:flex; flex-direction:column; gap:0.5rem;">
+                <input type="hidden" name="table" value="matriculas">
+                <input type="hidden" name="action" value="set_validation">
+                <input type="hidden" name="IdAluno" value="<%= fichaDetalhes.IdAluno %>">
+                <label style="font-size:0.95rem; font-weight:600;">Observações (opcional)</label>
+                <textarea name="ObservacoesValidacao" rows="3" maxlength="255" placeholder="Observações" style="width:100%;"></textarea>
+                <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
+                  <button class="table-action-btn" type="submit" name="EstadoValidacao" value="Aprovada">Aceitar Ficha</button>
+                  <button class="table-action-btn danger-button" type="submit" name="EstadoValidacao" value="Rejeitada" onclick="return confirm('Rejeitar esta ficha?')">Rejeitar Ficha</button>
+                </div>
+              </form>
+            </div>
+          <% } %>
         </div>
       </div>
 
@@ -170,6 +185,34 @@
       <% } %>
     <% } else { %>
       <h2>Matrículas</h2>
+
+      <!-- Filters Row with Inline CSS -->
+      <div style="display: flex; flex-direction: column; gap: 1.25rem; align-items: stretch; background: #F3F4F6; border: 2px solid #E5E7EB; border-radius: 8px; padding: 1.25rem; margin-bottom: 2rem; width: 100%;">
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
+          <label style="display: block; margin: 0; font-weight: 600; font-size: 0.9rem; color: #111827; text-transform: uppercase; letter-spacing: 0.05em;">Pesquisar por Nome</label>
+          <input type="text" placeholder="Nome do Aluno" style="width: 100%; padding: 0.875rem 1rem; background: #FFFFFF; border: none; border-radius: 6px; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.95rem; color: #111827; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);" />
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
+          <label style="display: block; margin: 0; font-weight: 600; font-size: 0.9rem; color: #111827; text-transform: uppercase; letter-spacing: 0.05em;">Filtrar por Curso</label>
+          <select style="width: 100%; padding: 0.875rem 1rem; background: #FFFFFF; border: none; border-radius: 6px; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.95rem; color: #111827; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23111827%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.25rem; padding-right: 2.5rem;">
+            <option value="">Todos os Cursos</option>
+            <% cursos.forEach(c => { %>
+              <option value="<%= c.IdCurso %>"><%= c.Curso %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; width: 100%;">
+          <label style="display: block; margin: 0; font-weight: 600; font-size: 0.9rem; color: #111827; text-transform: uppercase; letter-spacing: 0.05em;">Filtrar por Estado</label>
+          <select style="width: 100%; padding: 0.875rem 1rem; background: #FFFFFF; border: none; border-radius: 6px; font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 0.95rem; color: #111827; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); appearance: none; background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23111827%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3e%3cpolyline points=%226 9 12 15 18 9%22%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.25rem; padding-right: 2.5rem;">
+            <option value="">Todos os Estados</option>
+            <option value="Aprovada">Aprovada</option>
+            <option value="Rejeitada">Rejeitada</option>
+            <option value="Pendente">Pendente</option>
+          </select>
+        </div>
+      </div>
 
       <h3>Matrículas Aceites</h3>
       <div class="table-scroll">
@@ -368,6 +411,7 @@
       </form>
     </div>
   <% } %>
+
 </div>
 </body>
 </html>

@@ -3,6 +3,9 @@
    Zero depth, color as structure, typography as hierarchy
    ══════════════════════════════════════════════════════════════ */
 
+/* Bootstrap (via CDN) */
+@import url('https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css');
+
 /* ── DESIGN TOKENS ──────────────────────────────────────────── */
 :root {
   /* Colors — Vibrant, Confident Palette */
@@ -823,24 +826,93 @@ tbody tr:hover td {
   opacity: 0.7;
 }
 
-/* ── FILTERS ROW ────────────────────────────────────────── */
+/* ── FILTERS ROW (LEGACY) ────────────────────────────────────────── */
 .filters-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  align-items: end;
   background: var(--muted);
   border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
 }
 
-.filters-row div {
+/* ── FILTER GRID LAYOUT ──────────────────────────────────────────── */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  align-items: end;
+  background: var(--muted);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.filter-field {
   display: flex;
   flex-direction: column;
+  gap: 0.5rem;
 }
 
-.filters-row input,
-.filters-row select {
-  max-width: 250px;
+.filter-label {
+  display: block;
+  margin: 0;
+  font-weight: var(--font-semibold);
+  font-size: 0.9rem;
+  color: var(--foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filter-input,
+.filter-select {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: var(--background);
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  color: var(--foreground);
+  transition: var(--transition-fast);
+}
+
+.filter-select {
+  cursor: pointer;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border: 1px solid var(--primary);
+}
+
+.filter-button {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  margin:7px;
+  background: var(--primary);
+  color: var(--background);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: var(--transition-fast);
+}
+
+.filter-button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.filter-button:active {
+  transform: translateY(0);
 }
 
 /* ── ACTIONS CONTAINER ──────────────────────────────────── */
@@ -1187,6 +1259,8 @@ tbody tr:hover td {
   border-radius: 4px;
   font-size: 0.85rem;
   font-weight: 600;
+  width: 85px;
+  text-align: center;
   white-space: nowrap;
 }
 
